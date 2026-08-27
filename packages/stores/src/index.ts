@@ -3,6 +3,9 @@
  */
 
 export * from "./stores/batch-store"
+export * from "./stores/batch/context-helpers"
+export * from "./stores/batch/codec-slice"
+export * from "./stores/batch/resize-slice"
 export * from "./stores/diffchecker-store"
 export * from "./stores/filling-store"
 export * from "./stores/inspector-store"

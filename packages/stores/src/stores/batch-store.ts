@@ -1,14 +1,6 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import {
-  mergeNormalizedAvifCodecOptions,
-  mergeNormalizedBmpCodecOptions,
-  mergeNormalizedIcoCodecOptions,
-  mergeNormalizedPngCodecOptions,
-  mergeNormalizedWebpCodecOptions,
-} from "@imify/core/codec-options"
-import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
 import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@imify/core/types"
 import type { SavedPreset, PresetViewMode } from "@imify/core"
@@ -25,51 +17,61 @@ import {
   toAspectRatioLabel
 } from "./batch-normalizer"
 
+import {
+  createDefaultUIState,
+  createDefaultPresetViewByContext,
+  createDefaultPresetBootstrapState,
+  getRecentPresetIdForContext,
+  cloneContextConfig,
+  buildBatchContextFieldPatch,
+  buildBatchContextUIPatch,
+} from "./batch/context-helpers"
+
+import {
+  createCodecOptionsSlice,
+  type CodecOptionsSlice,
+  type CodecOptionsSliceActions,
+  buildBatchContextFormatOptionsStatePatch,
+  buildBatchContextJxlStatePatch,
+  buildBatchContextWebpStatePatch,
+  buildBatchContextAvifStatePatch,
+  buildBatchContextPngStatePatch,
+  buildBatchContextBmpStatePatch,
+  buildBatchContextIcoStatePatch
+} from "./batch/codec-slice"
+
+import {
+  createResizeSlice,
+  type ResizeSlice,
+  type ResizeSliceActions
+} from "./batch/resize-slice"
+
+export {
+  createDefaultUIState,
+  createDefaultPresetViewByContext,
+  createDefaultPresetBootstrapState,
+  getRecentPresetIdForContext,
+  cloneContextConfig,
+  buildBatchContextFieldPatch,
+  buildBatchContextUIPatch,
+  buildBatchContextFormatOptionsStatePatch,
+  buildBatchContextJxlStatePatch,
+  buildBatchContextWebpStatePatch,
+  buildBatchContextAvifStatePatch,
+  buildBatchContextPngStatePatch,
+  buildBatchContextBmpStatePatch,
+  buildBatchContextIcoStatePatch,
+  createCodecOptionsSlice,
+  createResizeSlice,
+}
+
 export type ProcessorPresetViewMode = PresetViewMode
 
 export interface SavedSetupPreset extends SavedPreset<BatchSetupState> {
   context?: SetupContext
 }
 
-function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }> {
-  return {
-    single: { isTargetFormatQualityOpen: true, isResizeOpen: true },
-    batch: { isTargetFormatQualityOpen: true, isResizeOpen: true }
-  }
-}
-
-function createDefaultPresetViewByContext(): Record<SetupContext, ProcessorPresetViewMode> {
-  return {
-    single: "select",
-    batch: "select"
-  }
-}
-
-function createDefaultPresetBootstrapState(): Record<SetupContext, boolean> {
-  return {
-    single: false,
-    batch: false
-  }
-}
-
-function getRecentPresetIdForContext(
-  context: SetupContext,
-  recentPresetIds: Partial<Record<SetupContext, string>>,
-  presets: SavedSetupPreset[]
-): string | null {
-  const preferredId = recentPresetIds[context]
-
-  if (preferredId && presets.some((preset) => preset.id === preferredId)) {
-    return preferredId
-  }
-
-  const latestPreset = presets
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0]
-
-  return latestPreset?.id ?? null
-}
-
-interface BatchStoreState extends BatchSetupState {
+interface BatchStoreState extends BatchSetupState, CodecOptionsSliceActions, ResizeSliceActions {
   setupContext: SetupContext
   contextConfigs: Record<SetupContext, BatchSetupState>
   sourceStateByContext: Record<SetupContext, { width: number; height: number; syncVersion: number }>
@@ -88,55 +90,6 @@ interface BatchStoreState extends BatchSetupState {
   migrateSchemaToV2: () => void
   setSetupContext: (context: SetupContext) => void
   setIsRunning: (value: boolean) => void
-  setTargetFormat: (value: BatchTargetFormat) => void
-  setConcurrency: (value: number) => void
-  setQuality: (value: number) => void
-  setJxlEffort: (value: number) => void
-  setJxlLossless: (value: boolean) => void
-  setJxlProgressive: (value: boolean) => void
-  setJxlEpf: (value: 0 | 1 | 2 | 3) => void
-  setWebpLossless: (value: boolean) => void
-  setWebpNearLossless: (value: number) => void
-  setWebpEffort: (value: number) => void
-  setWebpSharpYuv: (value: boolean) => void
-  setWebpPreserveExactAlpha: (value: boolean) => void
-  setAvifSpeed: (value: number) => void
-  setAvifQualityAlpha: (value: number) => void
-  setAvifLossless: (value: boolean) => void
-  setAvifSubsample: (value: 1 | 2 | 3) => void
-  setAvifTune: (value: "auto" | "ssim" | "psnr") => void
-  setAvifHighAlphaQuality: (value: boolean) => void
-  setMozJpegProgressive: (value: boolean) => void
-  setMozJpegChromaSubsampling: (value: 0 | 1 | 2) => void
-  setIcoSizes: (value: number[]) => void
-  setIcoGenerateWebIconKit: (value: boolean) => void
-  setIcoOptimizeInternalPngLayers: (value: boolean) => void
-  setResizeMode: (value: BatchResizeMode) => void
-  setResizeValue: (value: number) => void
-  setResizeApplyTo: (value: ResizeApplyTo) => void
-  setResizeWidth: (value: number) => void
-  setResizeHeight: (value: number) => void
-  setResizeAspectMode: (value: BatchSetupState["resizeAspectMode"]) => void
-  setResizeAspectRatio: (value: string) => void
-  setResizeAnchor: (value: BatchSetupState["resizeAnchor"]) => void
-  setResizeFitMode: (value: BatchSetupState["resizeFitMode"]) => void
-  setResizeContainBackground: (value: string) => void
-  setResizeResamplingAlgorithm: (value: BatchSetupState["resizeResamplingAlgorithm"]) => void
-  syncResizeToSource: (width: number, height: number) => void
-  setResizeQuickStats: (value: ResizeQuickStats) => void
-  setPaperSize: (value: PaperSize) => void
-  setDpi: (value: SupportedDPI) => void
-  setStripExif: (value: boolean) => void
-  setPngTinyMode: (value: boolean) => void
-  setPngCleanTransparentPixels: (value: boolean) => void
-  setPngAutoGrayscale: (value: boolean) => void
-  setPngDitheringLevel: (value: number) => void
-  setPngProgressiveInterlaced: (value: boolean) => void
-  setPngOxiPngCompression: (value: boolean) => void
-  setBmpColorDepth: (value: BmpColorDepth) => void
-  setBmpDitheringLevel: (value: number) => void
-  setTiffColorMode: (value: TiffColorMode) => void
-  setFileNamePattern: (value: string) => void
   skipDownloadConfirm: boolean
   setSkipDownloadConfirm: (value: boolean) => void
   skipOomWarning: boolean
@@ -145,7 +98,6 @@ interface BatchStoreState extends BatchSetupState {
   skipSplicingHeavyPreviewQualityWarning: boolean
   setSkipSplicingHeavyPreviewQualityWarning: (value: boolean) => void
   heavyFormatToast: { id: string; format: string } | null
-  setHeavyFormatToast: (value: { id: string; format: string } | null) => void
   /** Accordion open/close state for Export Format & Quality - per context */
   isTargetFormatQualityOpen: boolean
   setIsTargetFormatQualityOpen: (value: boolean) => void
@@ -160,177 +112,6 @@ interface BatchStoreState extends BatchSetupState {
   updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
   deletePreset: (presetId: string) => void
   togglePinPreset: (presetId: string) => void
-}
-
-function cloneContextConfig(state: BatchStoreState, context: SetupContext): BatchSetupState {
-  return cloneSetupState(state.contextConfigs[context] ?? DEFAULT_BATCH_STATE)
-}
-
-function buildBatchContextFieldPatch<K extends keyof BatchSetupState>(
-  state: BatchStoreState,
-  key: K,
-  value: BatchSetupState[K]
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext] ?? DEFAULT_BATCH_STATE
-  const nextConfig = {
-    ...currentConfig,
-    [key]: value
-  }
-
-  return {
-    [key]: value,
-    contextConfigs: {
-      ...contextConfigs,
-      [setupContext]: nextConfig
-    }
-  } as Partial<BatchStoreState>
-}
-
-function buildBatchContextUIPatch(
-  state: BatchStoreState,
-  patch: Partial<{ isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }>
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const uiStates = (state as any).uiStates ?? createDefaultUIState()
-  const nextUIState = {
-    ...uiStates[setupContext],
-    ...patch
-  }
-
-  return {
-    ...patch,
-    uiStates: {
-      ...uiStates,
-      [setupContext]: nextUIState
-    }
-  } as Partial<BatchStoreState>
-}
-
-function buildBatchContextFormatOptionsStatePatch(
-  state: BatchStoreState,
-  nextFormatOptions: BatchSetupState["formatOptions"]
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextConfig = {
-    ...currentConfig,
-    formatOptions: nextFormatOptions
-  }
-
-  return {
-    formatOptions: nextFormatOptions,
-    contextConfigs: {
-      ...contextConfigs,
-      [setupContext]: nextConfig
-    }
-  } as Partial<BatchStoreState>
-}
-
-type BatchJxlCodecPatch = Partial<BatchSetupState["formatOptions"]["jxl"]>
-
-function buildBatchContextJxlStatePatch(
-  state: BatchStoreState,
-  patch: BatchJxlCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextJxlOptions = mergeNormalizedJxlCodecOptions(currentConfig.formatOptions.jxl, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    jxl: nextJxlOptions
-  })
-}
-
-type BatchWebpCodecPatch = Partial<BatchSetupState["formatOptions"]["webp"]>
-
-function buildBatchContextWebpStatePatch(
-  state: BatchStoreState,
-  patch: BatchWebpCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextWebpOptions = mergeNormalizedWebpCodecOptions(currentConfig.formatOptions.webp, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    webp: nextWebpOptions
-  })
-}
-
-type BatchAvifCodecPatch = Partial<BatchSetupState["formatOptions"]["avif"]>
-
-function buildBatchContextAvifStatePatch(
-  state: BatchStoreState,
-  patch: BatchAvifCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextAvifOptions = mergeNormalizedAvifCodecOptions(currentConfig.formatOptions.avif, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    avif: nextAvifOptions
-  })
-}
-
-type BatchPngCodecPatch = Partial<BatchSetupState["formatOptions"]["png"]>
-
-function buildBatchContextPngStatePatch(
-  state: BatchStoreState,
-  patch: BatchPngCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextPngOptions = mergeNormalizedPngCodecOptions(currentConfig.formatOptions.png, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    png: nextPngOptions
-  })
-}
-
-type BatchBmpCodecPatch = Partial<BatchSetupState["formatOptions"]["bmp"]>
-
-function buildBatchContextBmpStatePatch(
-  state: BatchStoreState,
-  patch: BatchBmpCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextBmpOptions = mergeNormalizedBmpCodecOptions(currentConfig.formatOptions.bmp, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    bmp: nextBmpOptions
-  })
-}
-
-type BatchIcoCodecPatch = Partial<BatchSetupState["formatOptions"]["ico"]>
-
-function buildBatchContextIcoStatePatch(
-  state: BatchStoreState,
-  patch: BatchIcoCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextIcoOptions = mergeNormalizedIcoCodecOptions(currentConfig.formatOptions.ico, patch, {
-    defaultSizes: DEFAULT_BATCH_STATE.formatOptions.ico.sizes
-  })
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    ico: nextIcoOptions
-  })
 }
 
 function isSetupConfigEqual(a: BatchSetupState, b: BatchSetupState): boolean {
@@ -366,6 +147,13 @@ export const useBatchStore = create<BatchStoreState>()(
       contextConfigs: createDefaultContextConfigs(),
       sourceStateByContext: createDefaultSourceState(),
       uiStates: createDefaultUIState(),
+
+      // Codec slice actions
+      ...createCodecOptionsSlice(set),
+
+      // Resize slice actions
+      ...createResizeSlice(set),
+
       setSetupContext: (context) =>
         set((state) => {
           if (state.setupContext === context) {
@@ -428,147 +216,10 @@ export const useBatchStore = create<BatchStoreState>()(
           } as Partial<BatchStoreState>
         }),
       setIsRunning: (value) => set({ isRunning: value }),
-      setTargetFormat: (value) => set((state) => buildBatchContextFieldPatch(state, "targetFormat", value)),
-      setConcurrency: (value) => set((state) => buildBatchContextFieldPatch(state, "concurrency", value)),
-      setQuality: (value) => set((state) => buildBatchContextFieldPatch(state, "quality", value)),
-      setJxlEffort: (value) => set((state) => buildBatchContextJxlStatePatch(state, { effort: value })),
-      setJxlLossless: (value) => set((state) => buildBatchContextJxlStatePatch(state, { lossless: value })),
-      setJxlProgressive: (value) => set((state) => buildBatchContextJxlStatePatch(state, { progressive: value })),
-      setJxlEpf: (value) => set((state) => buildBatchContextJxlStatePatch(state, { epf: value })),
-      setWebpLossless: (value) => set((state) => buildBatchContextWebpStatePatch(state, { lossless: value })),
-      setWebpNearLossless: (value) =>
-        set((state) => buildBatchContextWebpStatePatch(state, { nearLossless: value })),
-      setWebpEffort: (value) => set((state) => buildBatchContextWebpStatePatch(state, { effort: value })),
-      setWebpSharpYuv: (value) => set((state) => buildBatchContextWebpStatePatch(state, { sharpYuv: value })),
-      setWebpPreserveExactAlpha: (value) =>
-        set((state) => buildBatchContextWebpStatePatch(state, { preserveExactAlpha: value })),
-      setAvifSpeed: (value) => set((state) => buildBatchContextAvifStatePatch(state, { speed: value })),
-      setAvifQualityAlpha: (value) =>
-        set((state) => buildBatchContextAvifStatePatch(state, { qualityAlpha: value })),
-      setAvifLossless: (value) => set((state) => buildBatchContextAvifStatePatch(state, { lossless: value })),
-      setAvifSubsample: (value) => set((state) => buildBatchContextAvifStatePatch(state, { subsample: value })),
-      setAvifTune: (value) => set((state) => buildBatchContextAvifStatePatch(state, { tune: value })),
-      setAvifHighAlphaQuality: (value) =>
-        set((state) => buildBatchContextAvifStatePatch(state, { highAlphaQuality: value })),
-      setMozJpegProgressive: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          return buildBatchContextFormatOptionsStatePatch(state, {
-            ...currentConfig.formatOptions,
-            mozjpeg: {
-              ...currentConfig.formatOptions.mozjpeg,
-              progressive: value
-            }
-          })
-        }),
-      setMozJpegChromaSubsampling: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          return buildBatchContextFormatOptionsStatePatch(state, {
-            ...currentConfig.formatOptions,
-            mozjpeg: {
-              ...currentConfig.formatOptions.mozjpeg,
-              chromaSubsampling: value
-            }
-          })
-        }),
-      setIcoSizes: (value) => set((state) => buildBatchContextIcoStatePatch(state, { sizes: value })),
-      setIcoGenerateWebIconKit: (value) =>
-        set((state) => buildBatchContextIcoStatePatch(state, { generateWebIconKit: value })),
-      setIcoOptimizeInternalPngLayers: (value) =>
-        set((state) => buildBatchContextIcoStatePatch(state, { optimizeInternalPngLayers: value })),
-      setResizeMode: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeMode", value)),
-      setResizeValue: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeValue", value)),
-      setResizeApplyTo: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeApplyTo", value)),
-      setResizeWidth: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeWidth", value)),
-      setResizeHeight: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeHeight", value)),
-      setResizeAspectMode: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeAspectMode", value)),
-      setResizeAspectRatio: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeAspectRatio", value)),
-      setResizeAnchor: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeAnchor", value)),
-      setResizeFitMode: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeFitMode", value)),
-      setResizeContainBackground: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeContainBackground", value)),
-      setResizeResamplingAlgorithm: (value) => set((state) => buildBatchContextFieldPatch(state, "resizeResamplingAlgorithm", value)),
-      syncResizeToSource: (width, height) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const sourceStateByContext = (state as any).sourceStateByContext ?? createDefaultSourceState()
-          const nextWidth = Math.max(1, Math.round(width))
-          const nextHeight = Math.max(1, Math.round(height))
-          const nextSyncVersion = (sourceStateByContext[setupContext]?.syncVersion ?? 0) + 1
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeWidth: nextWidth,
-            resizeHeight: nextHeight,
-            resizeAspectMode: "original" as const,
-            resizeAspectRatio: toAspectRatioLabel(nextWidth, nextHeight),
-            resizeAnchor: "width" as const
-          }
-
-          return {
-            resizeSourceWidth: nextWidth,
-            resizeSourceHeight: nextHeight,
-            resizeWidth: nextWidth,
-            resizeHeight: nextHeight,
-            resizeAspectMode: "original",
-            resizeAspectRatio: toAspectRatioLabel(nextWidth, nextHeight),
-            resizeAnchor: "width",
-            resizeSyncVersion: nextSyncVersion,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            },
-            sourceStateByContext: {
-              ...sourceStateByContext,
-              [setupContext]: {
-                width: nextWidth,
-                height: nextHeight,
-                syncVersion: nextSyncVersion
-              }
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeQuickStats: (value) => set({ resizeQuickStats: value }),
-      setPaperSize: (value) => set((state) => buildBatchContextFieldPatch(state, "paperSize", value)),
-      setDpi: (value) => set((state) => buildBatchContextFieldPatch(state, "dpi", value)),
-      setStripExif: (value) => set((state) => buildBatchContextFieldPatch(state, "stripExif", value)),
-      setPngTinyMode: (value) => set((state) => buildBatchContextPngStatePatch(state, { tinyMode: value })),
-      setPngCleanTransparentPixels: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { cleanTransparentPixels: value })),
-      setPngAutoGrayscale: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { autoGrayscale: value })),
-      setPngDitheringLevel: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { ditheringLevel: value })),
-      setPngProgressiveInterlaced: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { progressiveInterlaced: value })),
-      setPngOxiPngCompression: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { oxipngCompression: value })),
-      setBmpColorDepth: (value) => set((state) => buildBatchContextBmpStatePatch(state, { colorDepth: value })),
-      setBmpDitheringLevel: (value) =>
-        set((state) => buildBatchContextBmpStatePatch(state, { ditheringLevel: value })),
-      setTiffColorMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          return buildBatchContextFormatOptionsStatePatch(state, {
-            ...currentConfig.formatOptions,
-            tiff: {
-              ...currentConfig.formatOptions.tiff,
-              colorMode: value
-            }
-          })
-        }),
-      setFileNamePattern: (value) => set((state) => buildBatchContextFieldPatch(state, "fileNamePattern", value)),
       setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),
       setSkipSplicingHeavyPreviewQualityWarning: (value) =>
         set({ skipSplicingHeavyPreviewQualityWarning: value }),
       setSkipOomWarning: (value) => set({ skipOomWarning: value }),
-      setHeavyFormatToast: (value) => set({ heavyFormatToast: value }),
       setIsTargetFormatQualityOpen: (value) =>
         set((state) => buildBatchContextUIPatch(state, { isTargetFormatQualityOpen: value })),
       setIsResizeOpen: (value) =>
