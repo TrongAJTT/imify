@@ -535,6 +535,8 @@ export function CollageMakerWorkspace({
         <GridDesignWorkspace
           template={generatedTemplate}
           onRefresh={async () => {}}
+          allowReverse={false}
+          allowDetachSubRows={false}
           customActions={
             <Button
               variant="primary"

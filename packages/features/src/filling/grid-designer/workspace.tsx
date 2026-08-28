@@ -72,6 +72,8 @@ interface GridDesignWorkspaceProps {
   ) => void | Promise<void>;
   customActions?: React.ReactNode;
   autoSave?: boolean;
+  allowReverse?: boolean;
+  allowDetachSubRows?: boolean;
 }
 
 export function GridDesignWorkspace({
@@ -80,6 +82,8 @@ export function GridDesignWorkspace({
   onSaved,
   customActions,
   autoSave = false,
+  allowReverse = true,
+  allowDetachSubRows = true,
 }: GridDesignWorkspaceProps) {
   const { t } = useTranslation("filling");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -351,7 +355,7 @@ export function GridDesignWorkspace({
             </span>
           </Button>
 
-          {hasReversibleDefinition && (
+          {allowReverse && hasReversibleDefinition && (
             <Button
               variant="outline"
               size="sm"
@@ -462,6 +466,8 @@ export function GridDesignWorkspace({
           canvasWidth={template.canvasWidth}
           canvasHeight={template.canvasHeight}
           enabled={reorderCheck.allowed && !isViewportPanning}
+          allowReverse={allowReverse}
+          allowDetachSubRows={allowDetachSubRows}
           rowDefinitions={activeParams.rowDefinitions}
           onReorder={handleReorderRows}
           onReverseRow={handleReverseSingleRow}

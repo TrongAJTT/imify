@@ -19,6 +19,8 @@ export interface GridRowReorderOverlayProps {
   canvasWidth: number;
   canvasHeight: number;
   enabled: boolean;
+  allowReverse?: boolean;
+  allowDetachSubRows?: boolean;
   rowDefinitions?: string[];
   onReorder: (fromStart: number, fromEnd: number, toIndex: number) => void;
   onReverseRow?: (rowIndex: number) => void;
@@ -44,6 +46,8 @@ export function GridRowReorderOverlay({
   canvasWidth,
   canvasHeight,
   enabled,
+  allowReverse = true,
+  allowDetachSubRows = true,
   rowDefinitions,
   onReorder,
   onReverseRow,
@@ -316,7 +320,8 @@ export function GridRowReorderOverlay({
                 </div>
 
                 {/* Sub-row handles (revealed only on hover to detach individual rows) */}
-                {isGroupHovered &&
+                {allowDetachSubRows &&
+                  isGroupHovered &&
                   group.rowIndices.map((rIdx) => {
                     const rowB = boundsList[rIdx];
                     if (!rowB) return null;
@@ -357,7 +362,7 @@ export function GridRowReorderOverlay({
                           handlePointerEnterRow(rIdx, group.id)
                         }
                       >
-                        {canReverse && (
+                        {allowReverse && canReverse && (
                           <button
                             type="button"
                             data-viewer-interactive="true"
@@ -447,21 +452,23 @@ export function GridRowReorderOverlay({
                   <span>{group.startRow + 1}</span>
                 </button>
 
-                {rowDefinitions && canReverseDefinition(rowDefinitions[group.startRow]) && (
-                  <button
-                    type="button"
-                    data-viewer-interactive="true"
-                    aria-label={`Reverse cells in ${isColsMode ? "column" : "row"} ${group.startRow + 1}`}
-                    title={`Đảo thứ tự các ô trong ${isColsMode ? "Cột" : "Hàng"} ${group.startRow + 1}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReverseRow?.(group.startRow);
-                    }}
-                    className="inline-flex items-center justify-center rounded-md border border-slate-300/90 bg-white/90 dark:bg-slate-800/90 p-1 text-slate-600 dark:text-slate-200 shadow-sm transition-all hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-sky-500 dark:hover:text-white hover:scale-105 opacity-80 hover:opacity-100"
-                  >
-                    <ArrowLeftRight size={11} />
-                  </button>
-                )}
+                {allowReverse &&
+                  rowDefinitions &&
+                  canReverseDefinition(rowDefinitions[group.startRow]) && (
+                    <button
+                      type="button"
+                      data-viewer-interactive="true"
+                      aria-label={`Reverse cells in ${isColsMode ? "column" : "row"} ${group.startRow + 1}`}
+                      title={`Đảo thứ tự các ô trong ${isColsMode ? "Cột" : "Hàng"} ${group.startRow + 1}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReverseRow?.(group.startRow);
+                      }}
+                      className="inline-flex items-center justify-center rounded-md border border-slate-300/90 bg-white/90 dark:bg-slate-800/90 p-1 text-slate-600 dark:text-slate-200 shadow-sm transition-all hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-sky-500 dark:hover:text-white hover:scale-105 opacity-80 hover:opacity-100"
+                    >
+                      <ArrowLeftRight size={11} />
+                    </button>
+                  )}
               </div>
             )}
           </React.Fragment>
