@@ -36,7 +36,7 @@
   },
   "updateAvailableDialog": {
     "title": "New version available!",
-    "subtitle": "A new update is ready. Refresh now to get the latest features and fixes.",
+    "subtitle": "See what's new in this version.",
     "btnChangelogs": "View changelog",
     "btnUpdate": "Update now",
     "dontShowAgainToday": "Don't show again today"

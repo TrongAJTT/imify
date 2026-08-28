@@ -102,8 +102,8 @@ export function WhatsNewUpdateSummaryDialog({
       isOpen={isOpen}
       onClose={onSnooze}
       size="3xl"
-      mobileFullscreen
       contentClassName="p-0 overflow-hidden flex flex-col max-h-[90vh]"
+      showCloseButton
     >
       <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 sticky top-0 z-20 pr-12">
         <div className="flex items-center gap-3">
@@ -116,11 +116,9 @@ export function WhatsNewUpdateSummaryDialog({
           </div>
           <div>
             <Heading className="text-xl leading-tight">
-              {t("updateAvailableDialog.title")}
+              {t("updateAvailableDialog.title")} {`(v${version})`}
             </Heading>
-            <Kicker>
-              {t("updateAvailableDialog.subtitle")} {`(v${version})`}
-            </Kicker>
+            <Kicker>{t("updateAvailableDialog.subtitle")}</Kicker>
           </div>
         </div>
       </div>

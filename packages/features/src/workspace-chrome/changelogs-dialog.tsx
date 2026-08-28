@@ -128,15 +128,14 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      size="4xl"
+      size="5xl"
       mobileFullscreen
       contentClassName={
         isMobileDialog
           ? "flex h-full w-full overflow-hidden flex-col"
-          : "flex h-[720px] w-full min-h-0 overflow-hidden bg-white dark:bg-slate-900"
+          : "flex h-[86vh] w-full min-h-0 overflow-hidden bg-white dark:bg-slate-900"
       }
     >
-
       {/* Left Sidebar: Versions List */}
       {(!isMobileDialog || !activeVersion) && (
         <div
@@ -146,9 +145,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
               : "w-56 border-r pt-6 pb-4"
           }`}
         >
-          <div
-            className={`px-4 ${isMobileDialog ? "mb-4" : "mb-6"}`}
-          >
+          <div className={`px-4 ${isMobileDialog ? "mb-4" : "mb-6"}`}>
             <div>
               <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">
                 {t("changelogsDialog.title", "Changelogs")}

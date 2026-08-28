@@ -180,9 +180,8 @@ export function AboutDialog({
       size="3xl"
       mobileFullscreen
       contentClassName="p-6 md:p-8"
-    >
-      <div className="flex flex-col gap-8">
-        <div className="flex items-center gap-6">
+      header={
+        <div className="flex items-center gap-4 pb-2 md:pb-6">
           <button
             type="button"
             onClick={handleIconClick}
@@ -253,7 +252,10 @@ export function AboutDialog({
             </div>
           </div>
         </div>
-
+      }
+      stickyHeader
+    >
+      <div className="flex flex-col gap-8 pt-2 md:pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 dark:text-slate-300">
           <div className="space-y-4">
             <Kicker className="text-xs tracking-widest">
