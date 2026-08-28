@@ -205,8 +205,6 @@ export function DevToolsDialog({
     }
   }, [isOpen, isMobileDialog]);
 
-
-
   useEffect(() => {
     setRuntimeLogCaptureEnabled(devModeEnabled);
   }, [devModeEnabled]);
@@ -291,10 +289,9 @@ export function DevToolsDialog({
         contentClassName={
           isMobileDialog
             ? "flex h-full w-full overflow-hidden flex-col"
-            : "flex h-[720px] w-full min-h-0 overflow-hidden"
+            : "flex h-[calc(100dvh-4rem)] w-full min-h-0 overflow-hidden"
         }
       >
-
         <div
           className={`shrink-0 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${
             isMobileDialog
@@ -529,7 +526,11 @@ export function DevToolsDialog({
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
-              toast.success("Import successful", "State has been restored.", 3000)
+              toast.success(
+                "Import successful",
+                "State has been restored.",
+                3000,
+              )
             }
           />
           <I18nRuntimeImportDialog

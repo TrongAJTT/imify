@@ -18,17 +18,17 @@ export type BaseDialogSize =
   | "none";
 
 const SIZE_CLASSES: Record<BaseDialogSize, string> = {
-  sm: "max-w-sm max-h-[60dvh]",
-  md: "max-w-md max-h-[70dvh]",
-  lg: "max-w-lg max-h-[80dvh]",
-  xl: "max-w-xl max-h-[80dvh]",
-  "2xl": "max-w-2xl max-h-[85dvh]",
-  "3xl": "max-w-3xl max-h-[90dvh]",
-  "4xl": "max-w-4xl max-h-[90dvh]",
-  "5xl": "max-w-5xl max-h-[90dvh]",
-  "6xl": "max-w-6xl max-h-[90dvh]",
-  "7xl": "max-w-7xl max-h-[90dvh]",
-  full: "max-w-full max-h-[96dvh]",
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+  "4xl": "max-w-4xl",
+  "5xl": "max-w-5xl",
+  "6xl": "max-w-6xl",
+  "7xl": "max-w-7xl",
+  full: "max-w-full",
   none: "",
 };
 
@@ -193,7 +193,8 @@ export function BaseDialog({
   };
 
   // Keep SSR output and first client render identical to avoid hydration mismatch.
-  if (!mounted) return null;
+  // When closed, don't mount to prevent phantom DOM elements and style overrides.
+  if (!mounted || !isOpen) return null;
 
   const hasStructuredLayout = Boolean(
     header || footer || stickyHeader !== undefined || stickyFooter !== undefined,
@@ -220,7 +221,7 @@ export function BaseDialog({
       onTouchStart={(e) => e.stopPropagation()}
       className={cn(
         // m-auto centers it; adding w/max-w for mobile safety
-        "m-auto p-0 rounded-xl border-none select-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden overscroll-contain",
+        "m-auto p-0 rounded-xl border-none select-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden overscroll-contain max-h-[calc(100dvh-2rem)]",
         "w-[calc(100%-2rem)]",
         sizeClass,
         mobileFullscreenDialogClasses,
@@ -230,7 +231,7 @@ export function BaseDialog({
       {hasStructuredLayout ? (
         <div
           className={cn(
-            "relative flex flex-col max-h-[calc(100dvh-4rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden rounded-xl",
+            "relative flex flex-col max-h-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden rounded-xl",
             mobileFullscreenContentClasses,
             contentClassName,
           )}
@@ -290,7 +291,7 @@ export function BaseDialog({
           className={cn(
             // inner container handles scrolling when content is tall
             // use dvh (dynamic viewport height) for better mobile browser support
-            "relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-4rem)]",
+            "relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-2rem)]",
             mobileFullscreenContentClasses,
             contentClassName,
           )}

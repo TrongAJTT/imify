@@ -147,7 +147,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
           }`}
         >
           <div
-            className={`px-4 ${isMobileDialog ? "mb-4 flex items-center justify-between" : "mb-6"}`}
+            className={`px-4 ${isMobileDialog ? "mb-4" : "mb-6"}`}
           >
             <div>
               <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">
@@ -162,17 +162,6 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
                 </MutedText>
               )}
             </div>
-            {isMobileDialog && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={onClose}
-                aria-label={t("changelogsDialog.close", "Close")}
-              >
-                <X size={18} />
-              </Button>
-            )}
           </div>
 
           <nav className="flex-1 px-3 space-y-1 overflow-y-auto">

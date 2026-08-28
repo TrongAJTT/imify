@@ -30,7 +30,6 @@ import {
   CheckboxCard,
   DiscreteSlider,
   type DiscreteSliderOption,
-  NumberInput,
   SelectInput,
   ToggleSwitch,
   SettingsItemHeader,
@@ -376,12 +375,12 @@ export function WorkspaceSettingsDialog({
       <BaseDialog
         isOpen={isOpen}
         onClose={onClose}
-        size="6xl"
+        size="4xl"
         mobileFullscreen
         contentClassName={
           isMobileDialog
             ? "flex h-full w-full overflow-hidden flex-col"
-            : "flex h-[720px] w-full min-h-0 overflow-hidden"
+            : "flex h-[80vh] w-full min-h-0 overflow-hidden"
         }
       >
         <div

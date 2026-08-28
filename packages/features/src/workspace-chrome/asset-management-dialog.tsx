@@ -128,7 +128,8 @@ export function AssetManagementDialog({
       onClose={onClose}
       size="6xl"
       mobileFullscreen
-      contentClassName="w-full h-full max-h-[90dvh] overflow-hidden flex flex-col"
+      className="h-[calc(100dvh-4rem)]"
+      contentClassName="w-full h-full max-h-none overflow-hidden flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900 pr-12">

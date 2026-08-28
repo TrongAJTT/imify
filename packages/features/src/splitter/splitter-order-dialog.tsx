@@ -159,7 +159,8 @@ export function SplitterOrderDialog({
       isOpen={isOpen}
       onClose={onClose}
       size="3xl"
-      contentClassName="w-full overflow-hidden"
+      mobileFullscreen
+      contentClassName="w-full"
     >
       <div className="select-none">
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30 pr-12">

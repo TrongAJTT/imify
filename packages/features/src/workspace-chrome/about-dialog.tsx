@@ -178,6 +178,7 @@ export function AboutDialog({
       isOpen={isOpen}
       onClose={onClose}
       size="3xl"
+      mobileFullscreen
       contentClassName="p-6 md:p-8"
     >
       <div className="flex flex-col gap-8">

@@ -36,7 +36,8 @@ export function ModelDownloadDialog({
       isOpen={isOpen}
       onClose={onClose}
       size="md"
-      contentClassName="w-full p-0 overflow-hidden"
+      mobileFullscreen
+      contentClassName="w-full p-0"
     >
       <div className="p-6 space-y-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col items-center text-center space-y-3">
