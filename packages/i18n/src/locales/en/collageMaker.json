@@ -53,5 +53,13 @@
     "backgroundColor": "Canvas & Background Color",
     "outputSettings": "Export Settings",
     "exportCollage": "Export Collage"
+  },
+  "presetGrid": {
+    "filterLabel": "Photos",
+    "photoCount": "{{count}} photos",
+    "defaultBadge": "Default",
+    "customBadge": "Custom",
+    "emptyState": "No layouts available for {{count}} photos.",
+    "manageButton": "Manage"
   }
 }

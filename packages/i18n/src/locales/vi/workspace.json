@@ -140,6 +140,10 @@
       "fonts": {
         "label": "Phông chữ",
         "desc": "Quản lý các phông chữ đã cài đặt cho mã QR và tính năng văn bản"
+      },
+      "collagePresets": {
+        "label": "Mẫu ảnh ghép",
+        "desc": "Quản lý các mẫu bố cục ảnh ghép mặc định và tùy chỉnh"
       }
     },
     "deleteConfirm": "Xóa hình mờ đã lưu \"{{name}}\"?",
@@ -149,6 +153,18 @@
     "multiThreadActive": "Đa luồng",
     "asyncifyFallback": "Asyncify",
     "aiDesc": "Imify sử dụng ONNX Runtime Web để chạy các mô hình AI nhẹ 100% cục bộ. Các mô hình này được tải xuống một lần và được lưu vào bộ nhớ đệm để sử dụng ngoại tuyến, đảm bảo dữ liệu của bạn không bao giờ rời khỏi thiết bị.",
+    "collagePresets": {
+      "managementTitle": "Mẫu bố cục ảnh ghép",
+      "managementDesc": "Quản lý các mẫu có sẵn và mẫu tùy chỉnh do bạn lưu. Kéo để sắp xếp vị trí, nhấp chỉnh sửa để đổi tên, hoặc xóa các mẫu không cần thiết.",
+      "refreshButton": "Làm mới thứ tự",
+      "refreshConfirm": "Đặt lại thứ tự mẫu tùy chỉnh?",
+      "refreshDesc": "Thao tác này sẽ sắp xếp lại các mẫu tùy chỉnh theo thời gian tạo mới nhất.",
+      "refreshSuccess": "Đã đặt lại thứ tự mẫu thành công.",
+      "deleteConfirm": "Xóa mẫu \"{{name}}\"?",
+      "deletedToast": "Đã xóa mẫu thành công.",
+      "renameSuccess": "Đã đổi tên mẫu thành công.",
+      "reorderHint": "Mẹo: Kéo biểu tượng tay cầm trên thẻ tùy chỉnh để đổi thứ tự xuất hiện trong bộ chọn bố cục."
+    },
     "aiModels": {
       "deleteConfirm": "Xóa các tệp được lưu trong bộ nhớ đệm cho \"{{name}} ({{variant}})\"?",
       "deletedTitle": "Đã xóa mô hình",

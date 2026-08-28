@@ -11,6 +11,7 @@ export type { PresetViewMode, SavedPreset }
 
 export interface PresetStoreState<TConfig> {
   presets: SavedPreset<TConfig>[]
+  presetOrder: string[]
   activePresetId: string | null
   presetViewMode: PresetViewMode
   defaultPresetBootstrapped: boolean
@@ -25,6 +26,9 @@ export interface PresetStoreState<TConfig> {
   syncActivePresetConfig: (config: TConfig) => void
   togglePinPreset: (presetId: string) => void
   togglePresetPin: (presetId: string) => void
+  reorderPresets: (presets: SavedPreset<TConfig>[]) => void
+  setPresetOrder: (order: string[]) => void
+  resetPresetOrder: () => void
 }
 
 export interface CreatePresetStoreOptions<TConfig> {
@@ -49,6 +53,7 @@ export function createPresetStore<TConfig>(
     persist(
       (set, get) => ({
         presets: [],
+        presetOrder: [],
         activePresetId: null,
         presetViewMode: "select",
         defaultPresetBootstrapped: false,
@@ -220,12 +225,25 @@ export function createPresetStore<TConfig>(
         togglePresetPin: (presetId) => {
           get().togglePinPreset(presetId)
         },
+
+        reorderPresets: (presets) => {
+          set({ presets })
+        },
+
+        setPresetOrder: (order) => {
+          set({ presetOrder: order })
+        },
+
+        resetPresetOrder: () => {
+          set({ presetOrder: [] })
+        },
       }),
       {
         name: options.storageName,
         storage: createJSONStorage(() => deferredStorage),
         partialize: (state) => ({
           presets: state.presets,
+          presetOrder: state.presetOrder,
           activePresetId: state.activePresetId,
           presetViewMode:
             state.presetViewMode === "workspace" ? "workspace" : "select",
@@ -254,10 +272,16 @@ export function createPresetStore<TConfig>(
             })
           }
 
+          let nextPresetOrder = currentState.presetOrder
+          if (Array.isArray(persisted.presetOrder)) {
+            nextPresetOrder = persisted.presetOrder
+          }
+
           return {
             ...currentState,
             ...persisted,
             presets: nextPresets,
+            presetOrder: nextPresetOrder,
             presetViewMode:
               persisted.presetViewMode === "workspace" ? "workspace" : "select",
           }

@@ -140,6 +140,10 @@
       "fonts": {
         "label": "Fonts",
         "desc": "Manage installed fonts for QR codes and text features"
+      },
+      "collagePresets": {
+        "label": "Collage Layouts",
+        "desc": "Manage built-in and custom collage layout presets"
       }
     },
     "deleteConfirm": "Delete saved watermark \"{{name}}\"?",
@@ -149,6 +153,18 @@
     "multiThreadActive": "Multi-thread",
     "asyncifyFallback": "Asyncify",
     "aiDesc": "Imify uses ONNX Runtime Web to run lightweight AI models 100% locally. These models are downloaded once and cached for offline use, ensuring your data never leaves your device.",
+    "collagePresets": {
+      "managementTitle": "Collage Layout Presets",
+      "managementDesc": "Manage built-in templates and your custom grid presets. Drag custom presets to reorder, click edit to rename, or delete unwanted layouts.",
+      "refreshButton": "Reset Order",
+      "refreshConfirm": "Reset custom presets order?",
+      "refreshDesc": "This will reset your custom presets to their creation order.",
+      "refreshSuccess": "Presets order reset successfully.",
+      "deleteConfirm": "Delete preset \"{{name}}\"?",
+      "deletedToast": "Preset deleted successfully.",
+      "renameSuccess": "Preset renamed successfully.",
+      "reorderHint": "Tip: Drag handle on custom cards to reorder them in the layout picker."
+    },
     "aiModels": {
       "deleteConfirm": "Delete cached files for \"{{name}} ({{variant}})\"?",
       "deletedTitle": "Model deleted",

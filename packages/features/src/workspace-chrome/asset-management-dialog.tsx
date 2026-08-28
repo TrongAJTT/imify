@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Stamp, X, Brain, ChevronRight, ArrowLeft, Type } from "lucide-react";
+import {
+  Stamp,
+  X,
+  Brain,
+  ChevronRight,
+  ArrowLeft,
+  Type,
+  LayoutGrid,
+} from "lucide-react";
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab";
 import { AssetAIModelsTab } from "./asset-tabs/asset-ai-models-tab";
 import { AssetFontsTab } from "@imify/features/workspace-chrome/asset-tabs/asset-fonts-tab";
+import { AssetCollagePresetsTab } from "./asset-tabs/asset-collage-presets-tab";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useFontStore } from "@imify/stores/stores/font-store";
 import { formatFileSize } from "@imify/core";
@@ -19,7 +28,7 @@ interface AssetManagementDialogProps {
 const DEFAULT_INACTIVE_CLASS =
   "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200";
 
-type AssetTabId = "watermark" | "ai-models" | "fonts";
+type AssetTabId = "watermark" | "ai-models" | "fonts" | "collage-presets";
 
 interface AssetTabRawDefinition {
   id: AssetTabId;
@@ -71,6 +80,18 @@ const ASSET_TABS_RAW: AssetTabRawDefinition[] = [
       activeIcon: "text-violet-600 dark:text-violet-400",
     },
   },
+  {
+    id: "collage-presets",
+    labelKey: "assets.tabs.collagePresets.label",
+    descKey: "assets.tabs.collagePresets.desc",
+    icon: LayoutGrid,
+    colors: {
+      activeBg: "bg-amber-50 dark:bg-amber-500/10",
+      activeText: "text-amber-600 dark:text-amber-300",
+      activeRing: "ring-amber-200 dark:ring-amber-800",
+      activeIcon: "text-amber-600 dark:text-amber-400",
+    },
+  },
 ];
 
 export function AssetManagementDialog({
@@ -117,6 +138,8 @@ export function AssetManagementDialog({
         return <AssetAIModelsTab />;
       case "fonts":
         return <AssetFontsTab />;
+      case "collage-presets":
+        return <AssetCollagePresetsTab />;
       default:
         return null;
     }

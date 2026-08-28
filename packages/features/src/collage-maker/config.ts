@@ -6,11 +6,14 @@ export const COLLAGE_DEFAULT_NAME_PREFIX = "imify-collage";
 const DEFAULT_OUTER_PADDING = 20;
 const DEFAULT_GAP = 16;
 
+export const DEFAULT_COLLAGE_PRESET_COLOR = "#94a3b8";
+
 export interface CollageLayoutPreset {
   id: string;
   name?: string;
   imageCount: number;
   params: GridDesignParams;
+  highlightColor?: string;
 }
 
 const p = (
@@ -19,6 +22,7 @@ const p = (
   direction: "cols" | "rows",
   rowDefinitions: string[],
   name?: string,
+  highlightColor: string = DEFAULT_COLLAGE_PRESET_COLOR,
 ): CollageLayoutPreset => {
   const match = id.match(/default-(\d+)$/i);
   const defaultName = match ? `Default ${imageCount}x${match[1]}` : undefined;
@@ -26,6 +30,7 @@ const p = (
     id,
     name: name ?? defaultName,
     imageCount,
+    highlightColor,
     params: {
       direction,
       rowCount: rowDefinitions.length,

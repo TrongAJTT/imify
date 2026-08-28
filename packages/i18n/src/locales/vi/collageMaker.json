@@ -53,5 +53,13 @@
     "backgroundColor": "Màu Canvas & Bố cục",
     "outputSettings": "Cấu hình đầu ra",
     "exportCollage": "Xuất ảnh ghép"
+  },
+  "presetGrid": {
+    "filterLabel": "Số lượng ảnh",
+    "photoCount": "{{count}} ảnh",
+    "defaultBadge": "Mặc định",
+    "customBadge": "Tùy chỉnh",
+    "emptyState": "Không có mẫu layout cho {{count}} ảnh.",
+    "manageButton": "Quản lý"
   }
 }
