@@ -267,7 +267,6 @@ export function QrReaderWorkspace() {
       .then((stream) => {
         setCameraStream(stream);
         setIsScreenShare(false);
-        toast.success(t("workspace.cameraStarted"), t("workspace.cameraAlign"));
       })
       .catch((err) => {
         console.error("Camera access failed:", err);
@@ -287,10 +286,11 @@ export function QrReaderWorkspace() {
 
       setCameraStream(stream);
       setIsScreenShare(true);
-      toast.success(t("workspace.screenStarted"), t("workspace.screenSelect"));
-    } catch (err) {
-      console.error("DisplayMedia capture failed:", err);
-      toast.error(t("workspace.captureFailed"), t("workspace.captureError"));
+    } catch (err: any) {
+      if (err?.name !== "NotAllowedError" && err?.name !== "AbortError") {
+        console.error("DisplayMedia capture failed:", err);
+        toast.error(t("workspace.captureFailed"), t("workspace.captureError"));
+      }
     }
   };
 
@@ -420,7 +420,6 @@ export function QrReaderWorkspace() {
       .writeText(lastScanResult)
       .then(() => {
         setCopied(true);
-        toast.success(t("workspace.copied"), t("workspace.copiedSuccess"));
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => {
