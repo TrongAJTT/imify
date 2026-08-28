@@ -44,8 +44,8 @@ export function AssetCollagePresetsTab() {
       key={refreshKey}
       className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-slate-950/40"
     >
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="space-y-4 md:space-y-6">
+      <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+        <div className="space-y-4 md:space-y-6 pt-6">
           {/* Header Info Accordion Card */}
           <AccordionCard
             icon={<LayoutGrid size={16} />}

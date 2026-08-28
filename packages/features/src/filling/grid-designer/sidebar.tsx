@@ -468,15 +468,18 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
               onClick={() => setIsUsePresetDialogOpen(true)}
               colorTheme="sky"
             />
-            <SidebarCard
-              icon={<BookmarkPlus size={16} />}
-              label={t("gridDesigner.savePresetTitle")}
-              sublabel={t("gridDesigner.savePresetSublabel", {
-                count: layerCount,
-              })}
-              onClick={() => setIsSavePresetDialogOpen(true)}
-              colorTheme="sky"
-            />
+            {layerCount >= MIN_COLLAGE_IMAGES &&
+              layerCount <= MAX_COLLAGE_IMAGES && (
+                <SidebarCard
+                  icon={<BookmarkPlus size={16} />}
+                  label={t("gridDesigner.savePresetTitle")}
+                  sublabel={t("gridDesigner.savePresetSublabel", {
+                    count: layerCount,
+                  })}
+                  onClick={() => setIsSavePresetDialogOpen(true)}
+                  colorTheme="sky"
+                />
+              )}
           </div>
         </div>
       </AccordionCard>
