@@ -49,7 +49,8 @@ export function RenameInputDialog({
       isOpen={isOpen}
       onClose={onClose}
       shouldBlockCloseAttempt={() => true}
-      contentClassName="w-full max-w-md rounded-xl overflow-hidden flex flex-col"
+      size="md"
+      contentClassName="w-full overflow-hidden flex flex-col"
     >
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
         <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">

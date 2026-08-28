@@ -361,13 +361,15 @@ export function BatchWatermarkDialog({
       <BaseDialog
         isOpen={isOpen}
         onClose={handleCloseMainDialog}
+        size="6xl"
+        mobileFullscreen
         isDirty={isDirty}
         shouldBlockCloseAttempt={(eventType) =>
           eventType === "cancel" && isFilePickerInteracting
         }
         stickyHeader={true}
         header={
-          <div className="px-5 py-3 flex items-center justify-between">
+          <div className="px-5 py-3 flex items-center justify-between pr-12">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
                 <Stamp className="w-5 h-5 text-sky-600 dark:text-sky-400" />
@@ -381,13 +383,6 @@ export function BatchWatermarkDialog({
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleCloseMainDialog}
-              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-              aria-label="Close watermark dialog"
-            >
-              <X className="w-4 h-4 text-slate-500 dark:text-slate-300" />
-            </button>
           </div>
         }
         stickyFooter={true}

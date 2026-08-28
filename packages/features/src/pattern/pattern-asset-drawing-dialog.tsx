@@ -481,25 +481,18 @@ export function PatternAssetDrawingDialog({
       isOpen={isOpen}
       onClose={onClose}
       isDirty={hasUndoHistory}
-      className="max-w-5xl"
-      contentClassName="w-full max-w-[96vw] rounded-2xl"
+      onDirtyCloseAttempt={handleManualClose}
+      size="5xl"
+      contentClassName="w-full max-w-[96vw]"
       stickyHeader
       stickyFooter
       header={
-        <div className="px-5 py-3 flex items-center justify-between">
+        <div className="px-5 py-3 flex items-center justify-between pr-12">
           <div>
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               {t("drawingDialog.title")}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={handleManualClose}
-            className="h-8 w-8 rounded-md flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-            aria-label="Close drawing dialog"
-          >
-            <X size={16} />
-          </button>
         </div>
       }
       footer={

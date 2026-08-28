@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Check, Save, X } from "lucide-react";
-import { createPortal } from "react-dom";
-import { Button, PresetNameInput } from "@imify/ui";
+import { Check, Save } from "lucide-react";
+import { BaseDialog, Button, PresetNameInput } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import type { PresetNamingFeatureKey } from "@imify/core";
 
@@ -33,36 +32,21 @@ export function SavePresetDialog({
   );
 
   useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
     if (isOpen) setPresetName(defaultName);
   }, [isOpen, defaultName]);
 
-  if (!isOpen || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            {title}
-          </h3>
-          <button
-            type="button"
-            className="rounded-full p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={18} />
-          </button>
-        </div>
+  return (
+    <BaseDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      contentClassName="p-4"
+    >
+      <div className="mb-4 flex items-center justify-between pr-8">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+          {title}
+        </h3>
+      </div>
         <div className="space-y-4">
           <PresetNameInput
             value={presetName}
@@ -120,8 +104,6 @@ export function SavePresetDialog({
             </Button>
           </div>
         </div>
-      </div>
-    </div>,
-    document.body,
-  ) as unknown as React.ReactElement;
+    </BaseDialog>
+  );
 }

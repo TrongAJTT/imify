@@ -177,18 +177,9 @@ export function AboutDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-3xl rounded-2xl p-6 md:p-8 relative"
+      size="3xl"
+      contentClassName="p-6 md:p-8"
     >
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 z-10"
-        onClick={onClose}
-        aria-label="Close about dialog"
-      >
-        <X size={16} />
-      </Button>
-
       <div className="flex flex-col gap-8">
         <div className="flex items-center gap-6">
           <button

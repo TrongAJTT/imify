@@ -58,9 +58,10 @@ export function WatermarkSaveDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-lg mx-auto rounded-xl overflow-hidden flex flex-col"
+      size="lg"
+      contentClassName="w-full mx-auto overflow-hidden flex flex-col"
       header={
-        <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center justify-between px-5 py-4 pr-12">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-sky-100 p-2 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
               <Save size={18} />
@@ -77,14 +78,6 @@ export function WatermarkSaveDialog({
               </MutedText>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
-            aria-label="Close save watermark dialog"
-          >
-            <X size={16} />
-          </button>
         </div>
       }
       stickyHeader={true}

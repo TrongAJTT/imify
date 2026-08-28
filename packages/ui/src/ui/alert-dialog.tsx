@@ -44,8 +44,9 @@ export function AlertDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-md"
-      contentClassName="w-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150"
+      size="md"
+      showCloseButton={false}
+      contentClassName="w-full rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-150"
     >
       <div className="flex flex-col gap-4">
         <div className="flex items-start sm:items-center gap-3">

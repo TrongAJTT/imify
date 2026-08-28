@@ -158,23 +158,17 @@ export function SplitterOrderDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-3xl rounded-xl overflow-hidden"
+      size="3xl"
+      contentClassName="w-full overflow-hidden"
     >
       <div className="select-none">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30 pr-12">
           <div className="flex items-center gap-2">
             <ArrowUpDown size={16} className="text-sky-600 dark:text-sky-400" />
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
               {t("splitOrderDialogTitle")}
             </h3>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1 hover:bg-slate-200 dark:hover:bg-slate-700"
-          >
-            <X size={14} />
-          </button>
         </div>
 
         <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-[1.1fr_1fr]">

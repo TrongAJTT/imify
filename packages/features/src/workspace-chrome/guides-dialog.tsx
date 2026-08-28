@@ -16,7 +16,7 @@ import {
   FEATURE_MEDIA_ASSETS,
 } from "../shared/media-assets";
 import { FeatureMarkdown } from "../shared/feature-markdown";
-import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
+import { useDialogMobileBreakpoint } from "./desktop-layout";
 
 interface GuideItem {
   id: string;
@@ -54,7 +54,7 @@ const DEFAULT_INACTIVE_CLASS =
 
 export function GuidesDialog({ isOpen, onClose }: GuidesDialogProps) {
   const [activeTab, setActiveTab] = useState<string | null>(GUIDES[0].id);
-  const [isMobileDialog, setIsMobileDialog] = useState(false);
+  const isMobileDialog = useDialogMobileBreakpoint();
   const [markdown, setMarkdown] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,16 +72,7 @@ export function GuidesDialog({ isOpen, onClose }: GuidesDialogProps) {
     FEATURE_MEDIA_ASSETS.brand.imifyLogoPng,
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia(
-      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`,
-    );
-    const update = () => setIsMobileDialog(mediaQuery.matches);
-    update();
-    mediaQuery.addEventListener("change", update);
-    return () => mediaQuery.removeEventListener("change", update);
-  }, []);
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -155,21 +146,14 @@ export function GuidesDialog({ isOpen, onClose }: GuidesDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
+      size="4xl"
+      mobileFullscreen
       contentClassName={
         isMobileDialog
-          ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
-          : "relative flex h-[85vh] w-full min-h-0 overflow-hidden rounded-xl max-w-4xl"
+          ? "flex h-full w-full overflow-hidden flex-col"
+          : "flex h-[85vh] w-full min-h-0 overflow-hidden"
       }
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-3 top-3 z-25 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-        onClick={onClose}
-        aria-label="Close guides dialog"
-      >
-        <X size={18} />
-      </Button>
 
       <div
         className={`shrink-0 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${

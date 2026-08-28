@@ -109,9 +109,10 @@ export function RenamePatternDialog({
       isOpen={isOpen}
       onClose={onClose}
       isDirty={isDirty}
-      contentClassName="w-full max-w-2xl rounded-xl overflow-hidden flex flex-col"
+      size="2xl"
+      contentClassName="w-full overflow-hidden flex flex-col"
       header={
-        <div className="px-5 py-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+        <div className="px-5 py-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30 pr-12">
           <div className="flex items-center gap-3">
             <div className="p-1.5 bg-sky-100 dark:bg-sky-500/10 rounded-xl">
               <FileEdit className="w-4 h-4 text-sky-600 dark:text-sky-400" />
@@ -120,12 +121,6 @@ export function RenamePatternDialog({
               {title}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
       }
       stickyHeader={true}

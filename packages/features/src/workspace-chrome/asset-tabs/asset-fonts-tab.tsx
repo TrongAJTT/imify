@@ -759,7 +759,7 @@ export function AssetFontsTab() {
       <BaseDialog
         isOpen={isSystemPickerOpen}
         onClose={() => setIsSystemPickerOpen(false)}
-        className="max-w-lg"
+        size="lg"
         contentClassName="p-6 space-y-4 h-[75vh] max-h-[600px] flex flex-col"
       >
         <div className="flex flex-col gap-1">

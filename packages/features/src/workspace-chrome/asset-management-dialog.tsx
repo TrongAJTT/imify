@@ -126,11 +126,12 @@ export function AssetManagementDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-6xl"
-      contentClassName="w-full max-w-6xl h-[calc(100dvh-2rem)] overflow-hidden flex flex-col"
+      size="6xl"
+      mobileFullscreen
+      contentClassName="w-full h-full max-h-[90dvh] overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900 pr-12">
         <div className="flex items-center gap-3">
           {isMobile && activeTab && (
             <Button
@@ -155,15 +156,6 @@ export function AssetManagementDialog({
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-          aria-label="Close dialog"
-        >
-          <X size={18} />
-        </Button>
       </div>
 
       <div className="flex flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950/20">

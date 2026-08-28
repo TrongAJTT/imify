@@ -101,10 +101,11 @@ export function WhatsNewUpdateSummaryDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onSnooze}
-      className="max-w-3xl w-full"
+      size="3xl"
+      mobileFullscreen
       contentClassName="p-0 overflow-hidden flex flex-col max-h-[90vh]"
     >
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 sticky top-0 z-20">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 sticky top-0 z-20 pr-12">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center overflow-hidden">
             <img
@@ -122,15 +123,6 @@ export function WhatsNewUpdateSummaryDialog({
             </Kicker>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          onClick={onSnooze}
-          aria-label="Close update summary dialog"
-        >
-          <X size={18} />
-        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 pt-3 bg-slate-50/50 dark:bg-slate-900/50">

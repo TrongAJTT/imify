@@ -92,7 +92,7 @@ export function DevModeExportDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-2xl w-full"
+      size="2xl"
       contentClassName="p-6 flex flex-col gap-6"
     >
       <div className="contents" onClick={(event) => event.stopPropagation()}>

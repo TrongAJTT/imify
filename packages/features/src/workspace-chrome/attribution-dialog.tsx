@@ -20,17 +20,11 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full h-[calc(100dvh-2rem)] max-w-3xl rounded-lg p-6"
+      size="3xl"
+      mobileFullscreen
+      contentClassName="flex flex-col p-6 max-h-[85vh]"
     >
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-6 right-6 rounded-full border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all z-10"
-        onClick={onClose}
-      >
-        <X size={18} />
-      </Button>
-      <div className="flex flex-col gap-1 mb-6">
+      <div className="flex flex-col gap-1 mb-6 pr-8">
         <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           {t("attributionDialog.title")}
         </h3>
@@ -38,7 +32,7 @@ export function AttributionDialog({ isOpen, onClose }: AttributionDialogProps) {
           {t("attributionDialog.subtitle")}
         </p>
       </div>
-      <div className="flex flex-col gap-6 h-[calc(100dvh-13.25rem)] overflow-y-auto pr-2 custom-scrollbar py-1">
+      <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar py-1">
         {ATTRIBUTION_CATEGORIES.map((category) => (
           <div key={category.id} className="space-y-3">
             {/* Sticky header */}
