@@ -14,7 +14,14 @@ import {
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
-import { Button, BodyText, MutedText, Subheading, BaseDialog } from "@imify/ui";
+import {
+  AccordionCard,
+  Button,
+  BodyText,
+  MutedText,
+  Subheading,
+  BaseDialog,
+} from "@imify/ui";
 import { formatFileSize } from "@imify/core";
 import { useFontStore } from "@imify/stores/stores/font-store";
 import { toast, confirmDialog } from "@imify/stores";
@@ -393,19 +400,25 @@ export function AssetFontsTab() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-slate-950/40">
-      <div className="flex-1 overflow-y-auto p-6 space-y-8">
-        {/* Header Note */}
-        <div className="bg-white dark:bg-violet-500/10 p-5 rounded-xl flex gap-4 border border-slate-200 dark:border-violet-500/20 shadow-sm">
-          <Type className="text-violet-500 shrink-0" size={20} />
-          <div className="space-y-1 flex-1">
-            <BodyText className="text-sm font-bold text-slate-800 dark:text-violet-300">
-              {t("assets.fonts.managementTitle")}
-            </BodyText>
-            <MutedText className="text-xs leading-relaxed">
-              {t("assets.fonts.managementDesc")}
-            </MutedText>
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 md:space-y-6">
+        {/* Header Info Accordion Card */}
+        <AccordionCard
+          icon={<Type size={16} />}
+          label={t("assets.fonts.managementTitle")}
+          sublabel={
+            t("assets.fonts.managementDesc").length > 80
+              ? `${t("assets.fonts.managementDesc").slice(0, 80)}...`
+              : t("assets.fonts.managementDesc")
+          }
+          colorTheme="purple"
+          defaultOpen={
+            typeof window !== "undefined" ? window.innerWidth >= 640 : true
+          }
+        >
+          <MutedText className="text-xs text-slate-600 dark:text-purple-300/80 leading-relaxed">
+            {t("assets.fonts.managementDesc")}
+          </MutedText>
+        </AccordionCard>
 
         {/* Section 2: Custom Fonts Action Cards */}
         <div className="space-y-4">
@@ -759,7 +772,7 @@ export function AssetFontsTab() {
       <BaseDialog
         isOpen={isSystemPickerOpen}
         onClose={() => setIsSystemPickerOpen(false)}
-        className="max-w-lg"
+        size="lg"
         contentClassName="p-6 space-y-4 h-[75vh] max-h-[600px] flex flex-col"
       >
         <div className="flex flex-col gap-1">

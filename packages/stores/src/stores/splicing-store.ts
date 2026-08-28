@@ -16,7 +16,7 @@ import type {
   SplicingCaptionConfig
 } from "@imify/core"
 import { DEFAULT_SPLICING_CAPTION_CONFIG, getInitialCanvasHeightPx } from "@imify/core"
-import type { SavedSetupPreset } from "./batch-store"
+import type { SavedSplicingPreset } from "./splicing-preset-store"
 
 export const PREVIEW_QUALITY_PERCENTS = [20, 30, 50, 75, 100] as const
 
@@ -125,7 +125,7 @@ export interface SplicingStoreState {
   isExportFormatQualityOpen: boolean
   setIsExportFormatQualityOpen: (v: boolean) => void
 
-  applyPreset: (preset: SavedSetupPreset) => void
+  applyPreset: (preset: SavedSplicingPreset) => void
   resetToDefault: () => void
 }
 
@@ -180,7 +180,9 @@ export const useSplicingStore = create<SplicingStoreState>()(
       
       resizeQuickStats: {
         width: null,
-        height: null
+        height: null,
+        shortest: null,
+        longest: null
       },
 
       previewContainerHeight: getInitialCanvasHeightPx(400),

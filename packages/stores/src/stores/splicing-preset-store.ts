@@ -1,16 +1,10 @@
-import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware"
-import { deferredStorage } from "@imify/core/storage-adapter"
 import type {
   SplicingPreset,
   SplicingDirection,
   SplicingAlignment,
   SplicingImageAppearanceDirection,
   SplicingImageResize,
-  SplicingExportFormat,
   SplicingExportMode,
-  TiffColorMode,
-  BmpColorDepth,
   ResizeApplyTo,
   QuickExportFormat,
   SplicingCaptionMode,
@@ -18,11 +12,15 @@ import type {
   SplicingCaptionAlignment,
   SplicingCaptionOffsetLockMode,
   SplicingCaptionOffsetPaddingSource,
+  SplicingCaptionConfig,
+  PresetViewMode,
+  SavedPreset,
 } from "@imify/core"
 
 import { DEFAULT_SPLICING_CAPTION_CONFIG } from "@imify/core"
+import { createPresetStore, type PresetStoreState } from "../factories/create-preset-store"
 
-export type SplicingPresetViewMode = "select" | "workspace"
+export type SplicingPresetViewMode = PresetViewMode
 
 export interface SplicingPresetConfig {
   preset: SplicingPreset
@@ -55,6 +53,7 @@ export interface SplicingPresetConfig {
   exportFileNamePattern: string
   previewQualityPercent: number
   previewShowImageNumber: boolean
+  caption?: SplicingCaptionConfig
   captionMode?: SplicingCaptionMode
   captionFontFamily?: string
   captionFontSize?: number
@@ -76,36 +75,10 @@ export interface SplicingPresetConfig {
   captionRotate180?: boolean
 }
 
+export type SavedSplicingPreset = SavedPreset<SplicingPresetConfig>
+export type SplicingPresetStoreState = PresetStoreState<SplicingPresetConfig>
 
-export interface SavedSplicingPreset {
-  id: string
-  name: string
-  highlightColor: string
-  config: SplicingPresetConfig
-  createdAt: number
-  updatedAt: number
-}
-
-interface SplicingPresetStoreState {
-  presets: SavedSplicingPreset[]
-  activePresetId: string | null
-  presetViewMode: SplicingPresetViewMode
-  defaultPresetBootstrapped: boolean
-  recentPresetId: string | null
-
-  saveCurrentPreset: (payload: { name: string; highlightColor: string; config: SplicingPresetConfig }) => string
-  applyPreset: (presetId: string) => void
-  ensureDefaultPreset: () => string | null
-  setPresetViewMode: (mode: SplicingPresetViewMode) => void
-  updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
-  deletePreset: (presetId: string) => void
-  syncActivePresetConfig: (config: SplicingPresetConfig) => void
-}
-
-
-const PRESET_HIGHLIGHT_COLORS = ["rgb(59, 130, 246)", "rgb(34, 197, 94)", "rgb(249, 115, 22)", "rgb(168, 85, 247)"]
-
-function createDefaultConfig(): SplicingPresetConfig {
+export function createDefaultSplicingPresetConfig(): SplicingPresetConfig {
   return {
     preset: "stitch_vertical",
     primaryDirection: "vertical",
@@ -137,6 +110,7 @@ function createDefaultConfig(): SplicingPresetConfig {
     exportFileNamePattern: "spliced-[Index]",
     previewQualityPercent: 20,
     previewShowImageNumber: false,
+    caption: { ...DEFAULT_SPLICING_CAPTION_CONFIG },
     captionMode: DEFAULT_SPLICING_CAPTION_CONFIG.mode,
     captionFontFamily: DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
     captionFontSize: DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
@@ -159,180 +133,34 @@ function createDefaultConfig(): SplicingPresetConfig {
   }
 }
 
+function normalizeSplicingPresetConfigOnHydrate(config: SplicingPresetConfig): SplicingPresetConfig {
+  const nextConfig = { ...config }
+  let mode = nextConfig.imageResize
+  let applyTo = nextConfig.imageApplyTo ?? "width"
 
+  if ((mode as any) === "original" || (mode as any) === "none") {
+    mode = "inherit"
+  } else if ((mode as any) === "fit_width") {
+    mode = "fit_value"
+    applyTo = "width"
+  } else if ((mode as any) === "fit_height") {
+    mode = "fit_value"
+    applyTo = "height"
+  }
 
-export const useSplicingPresetStore = create<SplicingPresetStoreState>()(
-  persist(
-    (set, get) => ({
-      presets: [],
-      activePresetId: null,
-      presetViewMode: "select",
-      defaultPresetBootstrapped: false,
-      recentPresetId: null,
+  nextConfig.imageResize = mode
+  nextConfig.imageApplyTo = applyTo
+  return nextConfig
+}
 
-      setPresetViewMode: (mode) =>
-        set((state) => {
-          if (mode === "select") {
-            return {
-              presetViewMode: mode,
-              activePresetId: null
-            }
-          }
-          return { presetViewMode: mode }
-        }),
-
-      saveCurrentPreset: ({ name, highlightColor, config }) => {
-        const timestamp = Date.now()
-        const presetId = `splicing_preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
-
-        set((state) => ({
-          presets: [
-            {
-              id: presetId,
-              name,
-              highlightColor,
-              config: { ...config },
-              createdAt: timestamp,
-              updatedAt: timestamp
-            },
-            ...state.presets
-          ],
-          recentPresetId: presetId,
-          activePresetId: presetId,
-          presetViewMode: "workspace"
-        }))
-
-        return presetId
-      },
-
-      applyPreset: (presetId) => {
-        const preset = get().presets.find((p) => p.id === presetId)
-        if (!preset) return
-
-        set({
-          activePresetId: presetId,
-          recentPresetId: presetId,
-          presetViewMode: "workspace"
-        })
-      },
-
-      ensureDefaultPreset: () => {
-        const state = get()
-        if (state.defaultPresetBootstrapped) return null
-        if (state.presets.length > 0) {
-          set({ defaultPresetBootstrapped: true })
-          return null
-        }
-
-        const timestamp = Date.now()
-        const presetId = "splicing_preset_default_blue"
-
-        set((state) => ({
-          presets: [
-            {
-              id: presetId,
-              name: "Default Preset",
-              highlightColor: PRESET_HIGHLIGHT_COLORS[0],
-              config: createDefaultConfig(),
-              createdAt: timestamp,
-              updatedAt: timestamp
-            }
-          ],
-          activePresetId: presetId,
-          recentPresetId: presetId,
-          presetViewMode: "workspace",
-          defaultPresetBootstrapped: true
-        }))
-
-        return presetId
-      },
-
-      updatePresetMeta: ({ id, name, highlightColor }) => {
-        set((state) => ({
-          presets: state.presets.map((p) =>
-            p.id === id
-              ? {
-                  ...p,
-                  name,
-                  highlightColor,
-                  updatedAt: Date.now()
-                }
-              : p
-          )
-        }))
-      },
-
-      deletePreset: (presetId) => {
-        set((state) => {
-          const nextPresets = state.presets.filter((p) => p.id !== presetId)
-          const nextActivePresetId = state.activePresetId === presetId ? null : state.activePresetId
-          const nextRecentPresetId = state.recentPresetId === presetId ? nextPresets[0]?.id ?? null : state.recentPresetId
-          const nextPresetViewMode =
-            nextActivePresetId === null ? ("select" as const) : state.presetViewMode
-
-          return {
-            presets: nextPresets,
-            activePresetId: nextActivePresetId,
-            recentPresetId: nextRecentPresetId,
-            presetViewMode: nextPresetViewMode
-          }
-        })
-      },
-
-      syncActivePresetConfig: (config) => {
-        set((state) => {
-          const activeId = state.activePresetId
-          if (!activeId) return {}
-
-          return {
-            presets: state.presets.map((p) =>
-              p.id === activeId
-                ? {
-                    ...p,
-                    config: { ...config },
-                    updatedAt: Date.now()
-                  }
-                : p
-            )
-          }
-        })
-      }
-    }),
-    {
-      name: "imify-splicing-preset",
-      storage: createJSONStorage(() => deferredStorage),
-      merge: (persistedState, currentState) => {
-        const p = persistedState as Partial<SplicingPresetStoreState>
-        if (p && p.presets) {
-          p.presets = p.presets.map((preset) => {
-            const config = { ...preset.config }
-            let mode = config.imageResize
-            let applyTo = config.imageApplyTo ?? "width"
-
-            if ((mode as any) === "original" || (mode as any) === "none") {
-              mode = "inherit"
-            } else if ((mode as any) === "fit_width") {
-              mode = "fit_value"
-              applyTo = "width"
-            } else if ((mode as any) === "fit_height") {
-              mode = "fit_value"
-              applyTo = "height"
-            }
-
-            config.imageResize = mode
-            config.imageApplyTo = applyTo
-            return { ...preset, config }
-          })
-        }
-        return { ...currentState, ...p }
-      },
-      partialize: (state) => ({
-        presets: state.presets,
-        activePresetId: state.activePresetId,
-        presetViewMode: state.presetViewMode === "workspace" ? "workspace" : "select",
-        defaultPresetBootstrapped: state.defaultPresetBootstrapped,
-        recentPresetId: state.recentPresetId
-      })
-    }
-  )
-)
+export const useSplicingPresetStore = createPresetStore<SplicingPresetConfig>({
+  storageName: "imify-splicing-preset",
+  idPrefix: "splicing_preset",
+  defaultPresetId: "splicing_preset_default_blue",
+  defaultPresetName: "Default Preset",
+  defaultHighlightColor: "rgb(59, 130, 246)",
+  defaultViewModeOnEnsure: "workspace",
+  createDefaultConfig: createDefaultSplicingPresetConfig,
+  cloneConfig: (config) => ({ ...config }),
+  normalizeConfigOnHydrate: normalizeSplicingPresetConfigOnHydrate,
+})

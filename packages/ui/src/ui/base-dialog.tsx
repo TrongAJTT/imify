@@ -1,8 +1,38 @@
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { cn } from "./utils";
 
-interface BaseDialogProps {
+export type BaseDialogSize =
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "2xl"
+  | "3xl"
+  | "4xl"
+  | "5xl"
+  | "6xl"
+  | "7xl"
+  | "full"
+  | "none";
+
+const SIZE_CLASSES: Record<BaseDialogSize, string> = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-xl",
+  "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+  "4xl": "max-w-4xl",
+  "5xl": "max-w-5xl",
+  "6xl": "max-w-6xl",
+  "7xl": "max-w-7xl",
+  full: "max-w-full",
+  none: "",
+};
+
+export interface BaseDialogProps {
   isOpen: boolean;
   onClose: () => void;
   isDirty?: boolean;
@@ -14,6 +44,24 @@ interface BaseDialogProps {
   className?: string;
   /** The container class for the inner content wrapper */
   contentClassName?: string;
+  /** Dialog size variant on desktop (width + max-height). Defaults to "3xl" for backward compatibility. */
+  size?: BaseDialogSize;
+  /**
+   * Whether the dialog should be full screen on mobile devices (<= 599px).
+   * Overrides borders, margins, and border radius on mobile viewports.
+   * @default false
+   */
+  mobileFullscreen?: boolean;
+  /**
+   * Whether to automatically render a close [X] button at the top-right corner.
+   * Clicking the button safely triggers `handleCloseAttempt()`.
+   * @default true
+   */
+  showCloseButton?: boolean;
+  /** Custom class for the close button */
+  closeButtonClassName?: string;
+  /** Custom aria-label for the close button. Defaults to "Close dialog". */
+  closeButtonAriaLabel?: string;
   /** Optional header node */
   header?: React.ReactNode;
   /** Optional footer node */
@@ -33,9 +81,10 @@ interface BaseDialogProps {
  * Features:
  * 1. Native backdrop support (::backdrop) with Tailwind CSS styling
  * 2. Proper ESC key handling and click-outside (backdrop click) detection
- * 3. Mobile safe-area / viewport boundary handling
- * 4. isDirty check before closing
+ * 3. Mobile safe-area / viewport boundary handling & mobileFullscreen support
+ * 4. Built-in close button with isDirty verification
  * 5. Scroll lock on underlying page content when open
+ * 6. Responsive desktop size presets (sm -> 7xl, full, none)
  */
 export function BaseDialog({
   isOpen,
@@ -46,6 +95,11 @@ export function BaseDialog({
   children,
   className = "",
   contentClassName = "",
+  size = "3xl",
+  mobileFullscreen = false,
+  showCloseButton = true,
+  closeButtonClassName = "",
+  closeButtonAriaLabel = "Close dialog",
   header,
   footer,
   stickyHeader,
@@ -139,11 +193,22 @@ export function BaseDialog({
   };
 
   // Keep SSR output and first client render identical to avoid hydration mismatch.
-  if (!mounted) return null;
+  // When closed, don't mount to prevent phantom DOM elements and style overrides.
+  if (!mounted || !isOpen) return null;
 
   const hasStructuredLayout = Boolean(
     header || footer || stickyHeader !== undefined || stickyFooter !== undefined,
   );
+
+  const mobileFullscreenDialogClasses = mobileFullscreen
+    ? "max-[599px]:w-full max-[599px]:h-full max-[599px]:max-w-none max-[599px]:max-h-none max-[599px]:m-0 max-[599px]:rounded-none"
+    : "";
+
+  const mobileFullscreenContentClasses = mobileFullscreen
+    ? "max-[599px]:h-[100dvh] max-[599px]:max-h-[100dvh] max-[599px]:rounded-none max-[599px]:border-none max-[599px]:shadow-none"
+    : "";
+
+  const sizeClass = SIZE_CLASSES[size] ?? SIZE_CLASSES["3xl"];
 
   return createPortal(
     <dialog
@@ -156,18 +221,38 @@ export function BaseDialog({
       onTouchStart={(e) => e.stopPropagation()}
       className={cn(
         // m-auto centers it; adding w/max-w for mobile safety
-        "m-auto p-0 rounded-xl border-none select-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden overscroll-contain",
-        "w-[calc(100%-2rem)] max-w-3xl",
+        "m-auto p-0 rounded-xl border-none select-none bg-transparent backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200 outline-none overflow-hidden overscroll-contain max-h-[calc(100dvh-2rem)]",
+        "w-[calc(100%-2rem)]",
+        sizeClass,
+        mobileFullscreenDialogClasses,
         className,
       )}
     >
       {hasStructuredLayout ? (
         <div
           className={cn(
-            "flex flex-col max-h-[calc(100dvh-4rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden rounded-xl",
+            "relative flex flex-col max-h-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden rounded-xl",
+            mobileFullscreenContentClasses,
             contentClassName,
           )}
         >
+          {showCloseButton && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseAttempt(e);
+              }}
+              aria-label={closeButtonAriaLabel}
+              className={cn(
+                "absolute top-3.5 right-3.5 z-20 inline-flex items-center justify-center rounded-full p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+                closeButtonClassName,
+              )}
+            >
+              <X size={18} />
+            </button>
+          )}
+
           {header && (
             <div
               className={cn(
@@ -206,10 +291,28 @@ export function BaseDialog({
           className={cn(
             // inner container handles scrolling when content is tall
             // use dvh (dynamic viewport height) for better mobile browser support
-            "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-4rem)]",
+            "relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto overscroll-contain max-h-[calc(100dvh-2rem)]",
+            mobileFullscreenContentClasses,
             contentClassName,
           )}
         >
+          {showCloseButton && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseAttempt(e);
+              }}
+              aria-label={closeButtonAriaLabel}
+              className={cn(
+                "absolute top-3.5 right-3.5 z-20 inline-flex items-center justify-center rounded-full p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+                closeButtonClassName,
+              )}
+            >
+              <X size={18} />
+            </button>
+          )}
+
           {children}
         </div>
       )}

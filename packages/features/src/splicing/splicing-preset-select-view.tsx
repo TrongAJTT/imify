@@ -1,15 +1,21 @@
 import React, { useMemo, useState } from "react";
-import { Check, Edit2, LayoutGrid, Plus, Trash2 } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 
 import { EmptyDropCard } from "@imify/ui";
 import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
 import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { SplicingPresetDetail } from "./splicing-preset-detail";
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
+import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store";
 import { confirmDialog } from "@imify/stores";
 import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
+import { PresetActionToolbar } from "../shared/preset-action-toolbar";
+import {
+  QuickCollageButton,
+  QuickCollageEmptyCard,
+} from "../shared/quick-collage-shortcut";
 
 interface SplicingPresetSelectViewProps {
   presets: SavedSplicingPreset[];
@@ -22,6 +28,7 @@ interface SplicingPresetSelectViewProps {
     highlightColor: string;
   }) => void;
   onDeletePreset: (presetId: string) => void;
+  onTogglePinPreset?: (presetId: string) => void;
 }
 
 function SplicingPresetCard({
@@ -30,12 +37,14 @@ function SplicingPresetCard({
   onOpen,
   onEdit,
   onDelete,
+  onTogglePin,
 }: {
   preset: SavedSplicingPreset;
   isActive: boolean;
   onOpen: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onTogglePin?: () => void;
 }) {
   const { t } = useTranslation("splicing");
 
@@ -62,11 +71,18 @@ function SplicingPresetCard({
         }`}
         style={{ boxShadow: `inset 0 0 0 1.5px ${preset.highlightColor}` }}
       />
-      <div className="relative z-10 flex min-h-[84px] w-full overflow-hidden">
-        {/* <div className="w-1.5 shrink-0" style={{ backgroundColor: preset.highlightColor }} /> */}
 
+      <PresetActionToolbar
+        isPinned={preset.pinned || preset.isPinned}
+        onTogglePin={onTogglePin}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        alwaysVisible={isActive || preset.pinned || preset.isPinned}
+      />
+
+      <div className="relative z-10 flex min-h-[84px] w-full overflow-hidden">
         <div className="flex flex-1 flex-col p-3">
-          <div className="mb-2 flex min-w-0 items-start gap-2">
+          <div className="mb-2 flex min-w-0 items-start gap-2 pr-16">
             <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
               {preset.name}
             </span>
@@ -88,38 +104,6 @@ function SplicingPresetCard({
         </div>
       </div>
 
-      <div
-        className="absolute right-2 top-2 z-10 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
-        style={{ opacity: isActive ? 1 : undefined }}
-      >
-        <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onEdit();
-            }}
-            className="rounded p-1 text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-            aria-label="Edit preset"
-          >
-            <Edit2 size={12} />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onDelete();
-            }}
-            className="rounded p-1 text-red-600 transition-colors hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
-            aria-label="Delete preset"
-          >
-            <Trash2 size={12} />
-          </button>
-        </div>
-      </div>
-
       <div className="border-t border-slate-200/50 px-3 py-2 dark:border-slate-700/50">
         <SplicingPresetDetail preset={preset} />
       </div>
@@ -134,14 +118,25 @@ export function SplicingPresetSelectView({
   onCreatePreset,
   onUpdatePresetMeta,
   onDeletePreset,
+  onTogglePinPreset,
 }: SplicingPresetSelectViewProps) {
   const { t } = useTranslation("splicing");
   const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
   const [editingPreset, setEditingPreset] =
     useState<SavedSplicingPreset | null>(null);
 
+  const togglePinFromStore = useSplicingPresetStore(
+    (state) => state.togglePinPreset,
+  );
+  const handleTogglePinPreset = onTogglePinPreset ?? togglePinFromStore;
+
   const sortedPresets = useMemo(
-    () => [...presets].sort((a, b) => b.updatedAt - a.updatedAt),
+    () =>
+      [...presets].sort(
+        (a, b) =>
+          (b.pinned || b.isPinned ? 1 : 0) - (a.pinned || a.isPinned ? 1 : 0) ||
+          b.updatedAt - a.updatedAt,
+      ),
     [presets],
   );
 
@@ -184,25 +179,22 @@ export function SplicingPresetSelectView({
   };
 
   return (
-    <div className="p-0">
-      {sortedPresets.length === 0 ? (
+    <div className="flex flex-col gap-4">
+      {presets.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <EmptyDropCard
+            title={t("select.noPresetsTitle", {
+              defaultValue: "Chưa có preset ghép ảnh",
+            })}
+            subtitle={t("select.noPresetsSubtitle", {
+              defaultValue:
+                "Lưu cấu hình ghép ảnh yêu thích để tái sử dụng nhanh chóng",
+            })}
             icon={<Plus size={28} className="text-orange-500" />}
             iconWrapperClassName="bg-orange-100 dark:bg-orange-900/30 border-transparent shadow-none"
-            title={t("select.noPresetsTitle")}
-            subtitle={t("select.noPresetsSubtitle")}
             onClick={openCreateDialog}
           />
-          <EmptyDropCard
-            icon={<LayoutGrid size={28} className="text-amber-500" />}
-            iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
-            title="Ghép ảnh nhanh"
-            subtitle="Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh"
-            onClick={() => {
-              window.location.href = "/collage-maker";
-            }}
-          />
+          <QuickCollageEmptyCard />
         </div>
       ) : (
         <>
@@ -211,19 +203,7 @@ export function SplicingPresetSelectView({
             createLabel={t("select.newPreset")}
             onCreate={openCreateDialog}
             createIcon={<Plus size={14} />}
-            extraActions={
-              <button
-                type="button"
-                onClick={() => {
-                  window.location.href = "/collage-maker";
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                title="Ghép ảnh nhanh"
-              >
-                <LayoutGrid size={14} className="text-amber-500" />
-                <span>Ghép ảnh nhanh</span>
-              </button>
-            }
+            extraActions={<QuickCollageButton />}
           />
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
@@ -235,6 +215,7 @@ export function SplicingPresetSelectView({
                 onOpen={() => onOpenPreset(preset.id)}
                 onEdit={() => openEditDialog(preset)}
                 onDelete={() => confirmDeletePreset(preset)}
+                onTogglePin={() => handleTogglePinPreset(preset.id)}
               />
             ))}
           </div>

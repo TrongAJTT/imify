@@ -178,7 +178,7 @@ export function PdfStudioSidebarPanel({
             index: 1,
             totalFiles: 10,
           }}
-          theme="sky"
+          colorTheme="sky"
           defaultOpen
         >
           <div className="pt-2">

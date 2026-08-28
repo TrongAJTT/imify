@@ -1,26 +1,8 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import { deferredStorage } from "@imify/core/storage-adapter"
-import {
-  mergeNormalizedAvifCodecOptions,
-  mergeNormalizedBmpCodecOptions,
-  mergeNormalizedIcoCodecOptions,
-  mergeNormalizedPngCodecOptions,
-  mergeNormalizedWebpCodecOptions,
-  normalizeAvifCodecOptions,
-  normalizeBmpCodecOptions,
-  normalizeIcoCodecOptions,
-  normalizeMozJpegChromaSubsampling,
-  normalizePngCodecOptions,
-  normalizeWebpCodecOptions
-} from "@imify/core/codec-options"
-import { mergeNormalizedJxlCodecOptions } from "@imify/core/jxl-options"
-import { DEFAULT_ICO_SIZES } from "@imify/core/format-config"
-import { normalizeResizeResamplingAlgorithm } from "@imify/core/resize-resampling"
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats"
-import type { BmpColorDepth, PaperSize, SupportedDPI, TiffColorMode } from "@imify/core/types"
-import type { BatchResizeMode, BatchSetupState, BatchTargetFormat, ResizeApplyTo, SetupContext } from "./batch-types"
-import { DEFAULT_PRESET_HIGHLIGHT_COLOR } from "./preset-colors"
+import type { BatchSetupState, SetupContext } from "./batch-types"
 
 export type { SetupContext }
 
@@ -32,58 +14,80 @@ import {
   toAspectRatioLabel
 } from "./batch-normalizer"
 
-export type ProcessorPresetViewMode = "select" | "workspace"
+import {
+  createDefaultUIState,
+  createDefaultPresetViewByContext,
+  createDefaultPresetBootstrapState,
+  getRecentPresetIdForContext,
+  cloneContextConfig,
+  buildBatchContextFieldPatch,
+  buildBatchContextUIPatch,
+} from "./batch/context-helpers"
 
-export interface SavedSetupPreset {
-  id: string
-  context?: SetupContext
-  name: string
-  highlightColor: string
-  config: BatchSetupState
-  createdAt: number
-  updatedAt: number
-  pinned?: boolean
+import {
+  createCodecOptionsSlice,
+  type CodecOptionsSlice,
+  type CodecOptionsSliceActions,
+  buildBatchContextFormatOptionsStatePatch,
+  buildBatchContextJxlStatePatch,
+  buildBatchContextWebpStatePatch,
+  buildBatchContextAvifStatePatch,
+  buildBatchContextPngStatePatch,
+  buildBatchContextBmpStatePatch,
+  buildBatchContextIcoStatePatch
+} from "./batch/codec-slice"
+
+import {
+  createResizeSlice,
+  type ResizeSlice,
+  type ResizeSliceActions
+} from "./batch/resize-slice"
+
+import {
+  createPresetSlice,
+  type PresetSlice,
+  type PresetSliceActions,
+  type SavedSetupPreset,
+  type ProcessorPresetViewMode,
+  isSetupConfigEqual,
+} from "./batch/preset-slice"
+
+import {
+  createBatchUISlice,
+  type BatchUISlice,
+  type BatchUISliceActions
+} from "./batch/ui-slice"
+
+export {
+  createDefaultUIState,
+  createDefaultPresetViewByContext,
+  createDefaultPresetBootstrapState,
+  getRecentPresetIdForContext,
+  cloneContextConfig,
+  buildBatchContextFieldPatch,
+  buildBatchContextUIPatch,
+  buildBatchContextFormatOptionsStatePatch,
+  buildBatchContextJxlStatePatch,
+  buildBatchContextWebpStatePatch,
+  buildBatchContextAvifStatePatch,
+  buildBatchContextPngStatePatch,
+  buildBatchContextBmpStatePatch,
+  buildBatchContextIcoStatePatch,
+  createCodecOptionsSlice,
+  createResizeSlice,
+  createPresetSlice,
+  createBatchUISlice,
+  isSetupConfigEqual,
 }
 
-function createDefaultUIState(): Record<SetupContext, { isTargetFormatQualityOpen: boolean; isResizeOpen: boolean }> {
-  return {
-    single: { isTargetFormatQualityOpen: true, isResizeOpen: true },
-    batch: { isTargetFormatQualityOpen: true, isResizeOpen: true }
-  }
-}
+export type { ProcessorPresetViewMode, SavedSetupPreset }
 
-function createDefaultPresetViewByContext(): Record<SetupContext, ProcessorPresetViewMode> {
-  return {
-    single: "select",
-    batch: "select"
-  }
-}
-
-function createDefaultPresetBootstrapState(): Record<SetupContext, boolean> {
-  return {
-    single: false,
-    batch: false
-  }
-}
-
-function getRecentPresetIdForContext(
-  context: SetupContext,
-  recentPresetIds: Partial<Record<SetupContext, string>>,
-  presets: SavedSetupPreset[]
-): string | null {
-  const preferredId = recentPresetIds[context]
-
-  if (preferredId && presets.some((preset) => preset.id === preferredId)) {
-    return preferredId
-  }
-
-  const latestPreset = presets
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0]
-
-  return latestPreset?.id ?? null
-}
-
-interface BatchStoreState extends BatchSetupState {
+interface BatchStoreState
+  extends BatchSetupState,
+    CodecOptionsSliceActions,
+    ResizeSliceActions,
+    BatchUISliceActions,
+    PresetSliceActions {
   setupContext: SetupContext
   contextConfigs: Record<SetupContext, BatchSetupState>
   sourceStateByContext: Record<SetupContext, { width: number; height: number; syncVersion: number }>
@@ -99,214 +103,16 @@ interface BatchStoreState extends BatchSetupState {
   presets: SavedSetupPreset[]
   recentPresetIds: Partial<Record<SetupContext, string>>
   schemaVersion: number
-  migrateSchemaToV2: () => void
-  setSetupContext: (context: SetupContext) => void
-  setIsRunning: (value: boolean) => void
-  setTargetFormat: (value: BatchTargetFormat) => void
-  setConcurrency: (value: number) => void
-  setQuality: (value: number) => void
-  setJxlEffort: (value: number) => void
-  setJxlLossless: (value: boolean) => void
-  setJxlProgressive: (value: boolean) => void
-  setJxlEpf: (value: 0 | 1 | 2 | 3) => void
-  setWebpLossless: (value: boolean) => void
-  setWebpNearLossless: (value: number) => void
-  setWebpEffort: (value: number) => void
-  setWebpSharpYuv: (value: boolean) => void
-  setWebpPreserveExactAlpha: (value: boolean) => void
-  setAvifSpeed: (value: number) => void
-  setAvifQualityAlpha: (value: number) => void
-  setAvifLossless: (value: boolean) => void
-  setAvifSubsample: (value: 1 | 2 | 3) => void
-  setAvifTune: (value: "auto" | "ssim" | "psnr") => void
-  setAvifHighAlphaQuality: (value: boolean) => void
-  setMozJpegProgressive: (value: boolean) => void
-  setMozJpegChromaSubsampling: (value: 0 | 1 | 2) => void
-  setIcoSizes: (value: number[]) => void
-  setIcoGenerateWebIconKit: (value: boolean) => void
-  setIcoOptimizeInternalPngLayers: (value: boolean) => void
-  setResizeMode: (value: BatchResizeMode) => void
-  setResizeValue: (value: number) => void
-  setResizeApplyTo: (value: ResizeApplyTo) => void
-  setResizeWidth: (value: number) => void
-  setResizeHeight: (value: number) => void
-  setResizeAspectMode: (value: BatchSetupState["resizeAspectMode"]) => void
-  setResizeAspectRatio: (value: string) => void
-  setResizeAnchor: (value: BatchSetupState["resizeAnchor"]) => void
-  setResizeFitMode: (value: BatchSetupState["resizeFitMode"]) => void
-  setResizeContainBackground: (value: string) => void
-  setResizeResamplingAlgorithm: (value: BatchSetupState["resizeResamplingAlgorithm"]) => void
-  syncResizeToSource: (width: number, height: number) => void
-  setResizeQuickStats: (value: ResizeQuickStats) => void
-  setPaperSize: (value: PaperSize) => void
-  setDpi: (value: SupportedDPI) => void
-  setStripExif: (value: boolean) => void
-  setPngTinyMode: (value: boolean) => void
-  setPngCleanTransparentPixels: (value: boolean) => void
-  setPngAutoGrayscale: (value: boolean) => void
-  setPngDitheringLevel: (value: number) => void
-  setPngProgressiveInterlaced: (value: boolean) => void
-  setPngOxiPngCompression: (value: boolean) => void
-  setBmpColorDepth: (value: BmpColorDepth) => void
-  setBmpDitheringLevel: (value: number) => void
-  setTiffColorMode: (value: TiffColorMode) => void
-  setFileNamePattern: (value: string) => void
   skipDownloadConfirm: boolean
-  setSkipDownloadConfirm: (value: boolean) => void
   skipOomWarning: boolean
-  setSkipOomWarning: (value: boolean) => void
   /** If true, do not show Image Splicing “high preview quality” warning */
   skipSplicingHeavyPreviewQualityWarning: boolean
-  setSkipSplicingHeavyPreviewQualityWarning: (value: boolean) => void
   heavyFormatToast: { id: string; format: string } | null
-  setHeavyFormatToast: (value: { id: string; format: string } | null) => void
   /** Accordion open/close state for Export Format & Quality - per context */
   isTargetFormatQualityOpen: boolean
-  setIsTargetFormatQualityOpen: (value: boolean) => void
   /** Accordion open/close state for Resize - per context */
   isResizeOpen: boolean
-  setIsResizeOpen: (value: boolean) => void
-  setPresetViewMode: (context: SetupContext, mode: ProcessorPresetViewMode) => void
-  saveCurrentPreset: (payload: { id?: string; name: string; highlightColor: string }) => string
-  applyPresetToCurrentContext: (presetId: string) => void
-  ensureDefaultPresetForContext: (context: SetupContext) => string | null
-  syncActivePresetConfig: (context: SetupContext) => void
-  updatePresetMeta: (payload: { id: string; name: string; highlightColor: string }) => void
-  deletePreset: (presetId: string) => void
-  togglePinPreset: (presetId: string) => void
-}
-
-function cloneContextConfig(state: BatchStoreState, context: SetupContext): BatchSetupState {
-  return cloneSetupState(state.contextConfigs[context] ?? DEFAULT_BATCH_STATE)
-}
-
-function buildBatchContextFormatOptionsStatePatch(
-  state: BatchStoreState,
-  nextFormatOptions: BatchSetupState["formatOptions"]
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextConfig = {
-    ...currentConfig,
-    formatOptions: nextFormatOptions
-  }
-
-  return {
-    formatOptions: nextFormatOptions,
-    contextConfigs: {
-      ...contextConfigs,
-      [setupContext]: nextConfig
-    }
-  } as Partial<BatchStoreState>
-}
-
-type BatchJxlCodecPatch = Partial<BatchSetupState["formatOptions"]["jxl"]>
-
-function buildBatchContextJxlStatePatch(
-  state: BatchStoreState,
-  patch: BatchJxlCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextJxlOptions = mergeNormalizedJxlCodecOptions(currentConfig.formatOptions.jxl, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    jxl: nextJxlOptions
-  })
-}
-
-type BatchWebpCodecPatch = Partial<BatchSetupState["formatOptions"]["webp"]>
-
-function buildBatchContextWebpStatePatch(
-  state: BatchStoreState,
-  patch: BatchWebpCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextWebpOptions = mergeNormalizedWebpCodecOptions(currentConfig.formatOptions.webp, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    webp: nextWebpOptions
-  })
-}
-
-type BatchAvifCodecPatch = Partial<BatchSetupState["formatOptions"]["avif"]>
-
-function buildBatchContextAvifStatePatch(
-  state: BatchStoreState,
-  patch: BatchAvifCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextAvifOptions = mergeNormalizedAvifCodecOptions(currentConfig.formatOptions.avif, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    avif: nextAvifOptions
-  })
-}
-
-type BatchPngCodecPatch = Partial<BatchSetupState["formatOptions"]["png"]>
-
-function buildBatchContextPngStatePatch(
-  state: BatchStoreState,
-  patch: BatchPngCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextPngOptions = mergeNormalizedPngCodecOptions(currentConfig.formatOptions.png, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    png: nextPngOptions
-  })
-}
-
-type BatchBmpCodecPatch = Partial<BatchSetupState["formatOptions"]["bmp"]>
-
-function buildBatchContextBmpStatePatch(
-  state: BatchStoreState,
-  patch: BatchBmpCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextBmpOptions = mergeNormalizedBmpCodecOptions(currentConfig.formatOptions.bmp, patch)
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    bmp: nextBmpOptions
-  })
-}
-
-type BatchIcoCodecPatch = Partial<BatchSetupState["formatOptions"]["ico"]>
-
-function buildBatchContextIcoStatePatch(
-  state: BatchStoreState,
-  patch: BatchIcoCodecPatch
-): Partial<BatchStoreState> {
-  const setupContext = state.setupContext
-  const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-  const currentConfig = contextConfigs[setupContext]
-  const nextIcoOptions = mergeNormalizedIcoCodecOptions(currentConfig.formatOptions.ico, patch, {
-    defaultSizes: DEFAULT_BATCH_STATE.formatOptions.ico.sizes
-  })
-
-  return buildBatchContextFormatOptionsStatePatch(state, {
-    ...currentConfig.formatOptions,
-    ico: nextIcoOptions
-  })
-}
-
-function isSetupConfigEqual(a: BatchSetupState, b: BatchSetupState): boolean {
-  return JSON.stringify(cloneSetupState(a)) === JSON.stringify(cloneSetupState(b))
+  setSetupContext: (context: SetupContext) => void
 }
 
 export const useBatchStore = create<BatchStoreState>()(
@@ -319,7 +125,9 @@ export const useBatchStore = create<BatchStoreState>()(
       resizeSyncVersion: 0,
       resizeQuickStats: {
         width: null,
-        height: null
+        height: null,
+        shortest: null,
+        longest: null
       },
       isRunning: false,
       presets: [],
@@ -336,6 +144,20 @@ export const useBatchStore = create<BatchStoreState>()(
       contextConfigs: createDefaultContextConfigs(),
       sourceStateByContext: createDefaultSourceState(),
       uiStates: createDefaultUIState(),
+      schemaVersion: 2,
+
+      // Codec slice actions
+      ...createCodecOptionsSlice(set),
+
+      // Resize slice actions
+      ...createResizeSlice(set),
+
+      // Batch UI slice actions
+      ...createBatchUISlice(set),
+
+      // Preset slice actions
+      ...createPresetSlice(set),
+
       setSetupContext: (context) =>
         set((state) => {
           if (state.setupContext === context) {
@@ -397,835 +219,6 @@ export const useBatchStore = create<BatchStoreState>()(
             presetViewByContext
           } as Partial<BatchStoreState>
         }),
-      setIsRunning: (value) => set({ isRunning: value }),
-      setTargetFormat: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            targetFormat: value
-          }
-
-          return {
-            targetFormat: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setConcurrency: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            concurrency: value
-          }
-
-          return {
-            concurrency: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setQuality: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            quality: value
-          }
-
-          return {
-            quality: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setJxlEffort: (value) => set((state) => buildBatchContextJxlStatePatch(state, { effort: value })),
-      setJxlLossless: (value) => set((state) => buildBatchContextJxlStatePatch(state, { lossless: value })),
-      setJxlProgressive: (value) => set((state) => buildBatchContextJxlStatePatch(state, { progressive: value })),
-      setJxlEpf: (value) => set((state) => buildBatchContextJxlStatePatch(state, { epf: value })),
-      setWebpLossless: (value) => set((state) => buildBatchContextWebpStatePatch(state, { lossless: value })),
-      setWebpNearLossless: (value) =>
-        set((state) => buildBatchContextWebpStatePatch(state, { nearLossless: value })),
-      setWebpEffort: (value) => set((state) => buildBatchContextWebpStatePatch(state, { effort: value })),
-      setWebpSharpYuv: (value) => set((state) => buildBatchContextWebpStatePatch(state, { sharpYuv: value })),
-      setWebpPreserveExactAlpha: (value) =>
-        set((state) => buildBatchContextWebpStatePatch(state, { preserveExactAlpha: value })),
-      setAvifSpeed: (value) => set((state) => buildBatchContextAvifStatePatch(state, { speed: value })),
-      setAvifQualityAlpha: (value) =>
-        set((state) => buildBatchContextAvifStatePatch(state, { qualityAlpha: value })),
-      setAvifLossless: (value) => set((state) => buildBatchContextAvifStatePatch(state, { lossless: value })),
-      setAvifSubsample: (value) => set((state) => buildBatchContextAvifStatePatch(state, { subsample: value })),
-      setAvifTune: (value) => set((state) => buildBatchContextAvifStatePatch(state, { tune: value })),
-      setAvifHighAlphaQuality: (value) =>
-        set((state) => buildBatchContextAvifStatePatch(state, { highAlphaQuality: value })),
-      setMozJpegProgressive: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            mozjpeg: {
-              ...currentConfig.formatOptions.mozjpeg,
-              progressive: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setMozJpegChromaSubsampling: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            mozjpeg: {
-              ...currentConfig.formatOptions.mozjpeg,
-              chromaSubsampling: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setIcoSizes: (value) => set((state) => buildBatchContextIcoStatePatch(state, { sizes: value })),
-      setIcoGenerateWebIconKit: (value) =>
-        set((state) => buildBatchContextIcoStatePatch(state, { generateWebIconKit: value })),
-      setIcoOptimizeInternalPngLayers: (value) =>
-        set((state) => buildBatchContextIcoStatePatch(state, { optimizeInternalPngLayers: value })),
-      setResizeMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeMode: value
-          }
-
-          return {
-            resizeMode: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-       setResizeValue: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeValue: value
-          }
-
-          return {
-            resizeValue: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeApplyTo: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeApplyTo: value
-          }
-
-          return {
-            resizeApplyTo: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeWidth: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeWidth: value
-          }
-
-          return {
-            resizeWidth: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeHeight: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeHeight: value
-          }
-
-          return {
-            resizeHeight: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeAspectMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeAspectMode: value
-          }
-
-          return {
-            resizeAspectMode: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeAspectRatio: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeAspectRatio: value
-          }
-
-          return {
-            resizeAspectRatio: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeAnchor: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeAnchor: value
-          }
-
-          return {
-            resizeAnchor: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeFitMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeFitMode: value
-          }
-
-          return {
-            resizeFitMode: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeContainBackground: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeContainBackground: value
-          }
-
-          return {
-            resizeContainBackground: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeResamplingAlgorithm: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeResamplingAlgorithm: value
-          }
-
-          return {
-            resizeResamplingAlgorithm: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      syncResizeToSource: (width, height) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const sourceStateByContext = (state as any).sourceStateByContext ?? createDefaultSourceState()
-          const nextWidth = Math.max(1, Math.round(width))
-          const nextHeight = Math.max(1, Math.round(height))
-          const nextSyncVersion = (sourceStateByContext[setupContext]?.syncVersion ?? 0) + 1
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            resizeWidth: nextWidth,
-            resizeHeight: nextHeight,
-            resizeAspectMode: "original" as const,
-            resizeAspectRatio: toAspectRatioLabel(nextWidth, nextHeight),
-            resizeAnchor: "width" as const
-          }
-
-          return {
-            resizeSourceWidth: nextWidth,
-            resizeSourceHeight: nextHeight,
-            resizeWidth: nextWidth,
-            resizeHeight: nextHeight,
-            resizeAspectMode: "original",
-            resizeAspectRatio: toAspectRatioLabel(nextWidth, nextHeight),
-            resizeAnchor: "width",
-            resizeSyncVersion: nextSyncVersion,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            },
-            sourceStateByContext: {
-              ...sourceStateByContext,
-              [setupContext]: {
-                width: nextWidth,
-                height: nextHeight,
-                syncVersion: nextSyncVersion
-              }
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setResizeQuickStats: (value) => set({ resizeQuickStats: value }),
-      setPaperSize: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            paperSize: value
-          }
-
-          return {
-            paperSize: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setDpi: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            dpi: value
-          }
-
-          return {
-            dpi: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setStripExif: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            stripExif: value
-          }
-
-          return {
-            stripExif: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setPngTinyMode: (value) => set((state) => buildBatchContextPngStatePatch(state, { tinyMode: value })),
-      setPngCleanTransparentPixels: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { cleanTransparentPixels: value })),
-      setPngAutoGrayscale: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { autoGrayscale: value })),
-      setPngDitheringLevel: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { ditheringLevel: value })),
-      setPngProgressiveInterlaced: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { progressiveInterlaced: value })),
-      setPngOxiPngCompression: (value) =>
-        set((state) => buildBatchContextPngStatePatch(state, { oxipngCompression: value })),
-      setBmpColorDepth: (value) => set((state) => buildBatchContextBmpStatePatch(state, { colorDepth: value })),
-      setBmpDitheringLevel: (value) =>
-        set((state) => buildBatchContextBmpStatePatch(state, { ditheringLevel: value })),
-      setTiffColorMode: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const currentConfig = contextConfigs[setupContext]
-          const nextFormatOptions = {
-            ...currentConfig.formatOptions,
-            tiff: {
-              ...currentConfig.formatOptions.tiff,
-              colorMode: value
-            }
-          }
-          const nextConfig = {
-            ...currentConfig,
-            formatOptions: nextFormatOptions
-          }
-
-          return {
-            formatOptions: nextFormatOptions,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setFileNamePattern: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const contextConfigs = (state as any).contextConfigs ?? createDefaultContextConfigs()
-          const nextConfig = {
-            ...contextConfigs[setupContext],
-            fileNamePattern: value
-          }
-
-          return {
-            fileNamePattern: value,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: nextConfig
-            }
-          } as Partial<BatchStoreState>
-        }),
-      setSkipDownloadConfirm: (value) => set({ skipDownloadConfirm: value }),
-      setSkipSplicingHeavyPreviewQualityWarning: (value) =>
-        set({ skipSplicingHeavyPreviewQualityWarning: value }),
-      setSkipOomWarning: (value) => set({ skipOomWarning: value }),
-      setHeavyFormatToast: (value) => set({ heavyFormatToast: value }),
-      setIsTargetFormatQualityOpen: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const uiStates = (state as any).uiStates ?? createDefaultUIState()
-          const nextUIState = {
-            ...uiStates[setupContext],
-            isTargetFormatQualityOpen: value
-          }
-
-          return {
-            isTargetFormatQualityOpen: value,
-            uiStates: {
-              ...uiStates,
-              [setupContext]: nextUIState
-            }
-          }
-        }),
-      setIsResizeOpen: (value) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const uiStates = state.uiStates ?? createDefaultUIState()
-          const nextUIState = {
-            ...uiStates[setupContext],
-            isResizeOpen: value
-          }
-
-          return {
-            isResizeOpen: value,
-            uiStates: {
-              ...uiStates,
-              [setupContext]: nextUIState
-            }
-          }
-        }),
-      setPresetViewMode: (context, mode) =>
-        set((state) => {
-          const nextPresetViewByContext = {
-            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
-            [context]: mode
-          }
-          const nextActivePresetIds = {
-            ...state.activePresetIds
-          }
-
-          if (mode === "select") {
-            delete nextActivePresetIds[context]
-          }
-
-          return {
-            presetViewByContext: nextPresetViewByContext,
-            activePresetIds: nextActivePresetIds
-          }
-        }),
-      saveCurrentPreset: ({ id, name, highlightColor }) => {
-        const timestamp = Date.now()
-        const presetId = id || `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
-
-        set((state) => {
-          const setupContext = state.setupContext
-          const currentConfig = cloneContextConfig(state, setupContext)
-          const nextPresetViewByContext = {
-            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
-            [setupContext]: "workspace" as ProcessorPresetViewMode
-          }
-
-          const existingPresetIndex = id ? state.presets.findIndex((p) => p.id === id) : -1
-
-          if (existingPresetIndex !== -1) {
-            const existingPreset = state.presets[existingPresetIndex]
-            const updatedPreset: SavedSetupPreset = {
-              ...existingPreset,
-              name: name.trim() || existingPreset.name,
-              highlightColor: highlightColor || existingPreset.highlightColor,
-              config: currentConfig,
-              updatedAt: timestamp
-            }
-
-            const nextPresets = [...state.presets]
-            nextPresets[existingPresetIndex] = updatedPreset
-
-            return {
-              presets: nextPresets,
-              recentPresetIds: {
-                ...state.recentPresetIds,
-                [setupContext]: presetId
-              },
-              activePresetIds: {
-                ...state.activePresetIds,
-                [setupContext]: presetId
-              },
-              presetViewByContext: nextPresetViewByContext
-            }
-          }
-
-          const nextPreset: SavedSetupPreset = {
-            id: presetId,
-            context: setupContext,
-            name: name.trim() || "Untitled preset",
-            highlightColor,
-            config: currentConfig,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-            pinned: false
-          }
-
-          return {
-            presets: [nextPreset, ...state.presets],
-            recentPresetIds: {
-              ...state.recentPresetIds,
-              [setupContext]: nextPreset.id
-            },
-            activePresetIds: {
-              ...state.activePresetIds,
-              [setupContext]: nextPreset.id
-            },
-            presetViewByContext: nextPresetViewByContext
-          }
-        })
-
-        return presetId
-      },
-      applyPresetToCurrentContext: (presetId) =>
-        set((state) => {
-          const setupContext = state.setupContext
-          const preset = state.presets.find((entry) => entry.id === presetId)
-          if (!preset) {
-            return state
-          }
-
-          const config = cloneSetupState(preset.config)
-          const contextConfigs = state.contextConfigs ?? createDefaultContextConfigs()
-          const nextPresetViewByContext = {
-            ...(state.presetViewByContext ?? createDefaultPresetViewByContext()),
-            [setupContext]: "workspace" as ProcessorPresetViewMode
-          }
-
-          return {
-            ...config,
-            contextConfigs: {
-              ...contextConfigs,
-              [setupContext]: config
-            },
-            recentPresetIds: {
-              ...state.recentPresetIds,
-              [setupContext]: preset.id
-            },
-            activePresetIds: {
-              ...state.activePresetIds,
-              [setupContext]: preset.id
-            },
-            presetViewByContext: nextPresetViewByContext
-          }
-        }),
-      ensureDefaultPresetForContext: (context) => {
-        let ensuredPresetId: string | null = null
-
-        set((state) => {
-          if (state.presets.length > 0) {
-            ensuredPresetId = getRecentPresetIdForContext(context, state.recentPresetIds, state.presets)
-            if (state.defaultPresetBootstrappedByContext[context]) {
-              return state
-            }
-
-            return {
-              defaultPresetBootstrappedByContext: {
-                ...state.defaultPresetBootstrappedByContext,
-                [context]: true
-              }
-            }
-          }
-
-          if (state.defaultPresetBootstrappedByContext[context]) {
-            return state
-          }
-
-          const timestamp = Date.now()
-          const presetId = `preset_${timestamp}_${Math.random().toString(36).slice(2, 8)}`
-          ensuredPresetId = presetId
-          const defaultConfig = cloneContextConfig(state, context)
-
-          const nextPreset: SavedSetupPreset = {
-            id: presetId,
-            context,
-            name: "Default Preset",
-            highlightColor: DEFAULT_PRESET_HIGHLIGHT_COLOR,
-            config: defaultConfig,
-            createdAt: timestamp,
-            updatedAt: timestamp,
-            pinned: false
-          }
-
-          return {
-            presets: [nextPreset, ...state.presets],
-            recentPresetIds: {
-              ...state.recentPresetIds,
-              [context]: presetId
-            },
-            defaultPresetBootstrappedByContext: {
-              ...state.defaultPresetBootstrappedByContext,
-              [context]: true
-            }
-          }
-        })
-
-        return ensuredPresetId
-      },
-      syncActivePresetConfig: (context) =>
-        set((state) => {
-          const activePresetId = state.activePresetIds[context]
-          if (!activePresetId) {
-            return state
-          }
-
-          const currentConfig = cloneContextConfig(state, context)
-          let didUpdate = false
-
-          const nextPresets = state.presets.map((preset) => {
-            if (preset.id !== activePresetId) {
-              return preset
-            }
-
-            if (isSetupConfigEqual(preset.config, currentConfig)) {
-              return preset
-            }
-
-            didUpdate = true
-            return {
-              ...preset,
-              config: currentConfig,
-              updatedAt: Date.now()
-            }
-          })
-
-          if (!didUpdate) {
-            return state
-          }
-
-          return {
-            presets: nextPresets,
-            recentPresetIds: {
-              ...state.recentPresetIds,
-              [context]: activePresetId
-            }
-          }
-        }),
-      updatePresetMeta: ({ id, name, highlightColor }) =>
-        set((state) => ({
-          presets: state.presets.map((preset) =>
-            preset.id === id
-              ? {
-                  ...preset,
-                  name: name.trim() || "Untitled preset",
-                  highlightColor,
-                  updatedAt: Date.now()
-                }
-              : preset
-          )
-        })),
-      deletePreset: (presetId) =>
-        set((state) => {
-          const nextPresets = state.presets.filter((preset) => preset.id !== presetId)
-          const nextRecentPresetIds = {
-            ...state.recentPresetIds
-          }
-          const nextPresetViewByContext = {
-            ...(state.presetViewByContext ?? createDefaultPresetViewByContext())
-          }
-          const nextActivePresetIds = {
-            ...state.activePresetIds
-          }
-          const contextConfigs = state.contextConfigs ?? createDefaultContextConfigs()
-          let nextContextConfigs = contextConfigs
-          let activeConfigPatch: BatchSetupState | null = null
-
-          ;(["single", "batch"] as SetupContext[]).forEach((context) => {
-            const recentId = state.recentPresetIds[context]
-            if (recentId === presetId) {
-              const fallbackId = getRecentPresetIdForContext(context, nextRecentPresetIds, nextPresets)
-
-              if (fallbackId) {
-                nextRecentPresetIds[context] = fallbackId
-              } else {
-                delete nextRecentPresetIds[context]
-              }
-            }
-
-            if (nextActivePresetIds[context] === presetId) {
-              const fallbackId = getRecentPresetIdForContext(context, nextRecentPresetIds, nextPresets)
-
-              if (fallbackId) {
-                nextActivePresetIds[context] = fallbackId
-
-                const fallbackPreset = nextPresets.find(
-                  (preset) => preset.id === fallbackId
-                )
-                if (fallbackPreset) {
-                  const fallbackConfig = cloneSetupState(fallbackPreset.config)
-                  nextContextConfigs = {
-                    ...nextContextConfigs,
-                    [context]: fallbackConfig
-                  }
-
-                  if (context === state.setupContext) {
-                    activeConfigPatch = fallbackConfig
-                  }
-                }
-              } else {
-                delete nextActivePresetIds[context]
-                nextPresetViewByContext[context] = "select"
-              }
-            }
-          })
-
-          return {
-            ...(activeConfigPatch ? activeConfigPatch : {}),
-            presets: nextPresets,
-            recentPresetIds: nextRecentPresetIds,
-            activePresetIds: nextActivePresetIds,
-            presetViewByContext: nextPresetViewByContext,
-            contextConfigs: nextContextConfigs
-          }
-        }),
-      schemaVersion: 2,
-      migrateSchemaToV2: () =>
-        set((state) => {
-          if (state.schemaVersion === 2) return state
-          const unifiedConfig = cloneSetupState(state.contextConfigs?.single ?? state)
-          const nextContextConfigs = {
-            single: unifiedConfig,
-            batch: unifiedConfig
-          }
-          
-          // Deduplicate presets
-          const uniquePresets: SavedSetupPreset[] = []
-          const configHashes = new Set<string>()
-          for (const preset of state.presets) {
-            const configStr = JSON.stringify(preset.config)
-            const hashKey = `${preset.name}_${configStr}`
-            if (!configHashes.has(hashKey)) {
-              configHashes.add(hashKey)
-              uniquePresets.push(preset)
-            }
-          }
-
-          return {
-            ...unifiedConfig,
-            contextConfigs: nextContextConfigs,
-            presets: uniquePresets,
-            schemaVersion: 2
-          }
-        }),
-      togglePinPreset: (presetId) =>
-        set((state) => ({
-          presets: state.presets.map((preset) =>
-            preset.id === presetId
-              ? {
-                  ...preset,
-                  pinned: !preset.pinned,
-                  updatedAt: Date.now()
-                }
-              : preset
-          )
-        }))
     }),
     {
       name: "imify-batch-setup",

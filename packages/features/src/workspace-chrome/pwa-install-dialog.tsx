@@ -36,19 +36,9 @@ export function PwaInstallDialog({ isOpen, onClose }: PwaInstallDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-md"
-      contentClassName="relative w-full rounded-2xl p-6 md:p-8"
+      size="md"
+      contentClassName="p-6 md:p-8"
     >
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 z-10"
-        onClick={onClose}
-        aria-label="Close install dialog"
-      >
-        <X size={16} />
-      </Button>
-
       <div className="flex flex-col items-center text-center mt-2">
         <div className="w-12 h-12 rounded-full bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center text-sky-500 mb-4">
           <Download size={22} />

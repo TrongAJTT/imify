@@ -14,6 +14,8 @@ type PopoverPreset = "tooltip" | "dropdown" | "inspector"
 interface ControlledPopoverProps {
   trigger: ReactNode
   children: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   preset?: PopoverPreset
   behavior?: PopoverBehavior
   modal?: boolean
@@ -79,6 +81,8 @@ const PRESET_MAP: Record<
 export function ControlledPopover({
   trigger,
   children,
+  open: controlledOpen,
+  onOpenChange,
   preset = "dropdown",
   behavior,
   modal,
@@ -105,7 +109,17 @@ export function ControlledPopover({
   const resolvedOpenDelayMs = openDelayMs ?? presetValues.openDelayMs
   const resolvedCloseDelayMs = closeDelayMs ?? presetValues.closeDelayMs
 
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = typeof controlledOpen === "boolean"
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!isControlled) {
+      setUncontrolledOpen(nextOpen)
+    }
+    onOpenChange?.(nextOpen)
+  }
+
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   const triggerWrapperRef = useRef<HTMLSpanElement | null>(null)
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -134,11 +148,11 @@ export function ControlledPopover({
     clearCloseTimer()
     clearOpenTimer()
     if (resolvedOpenDelayMs <= 0) {
-      setOpen(true)
+      handleOpenChange(true)
       return
     }
     openTimerRef.current = setTimeout(() => {
-      setOpen(true)
+      handleOpenChange(true)
       openTimerRef.current = null
     }, resolvedOpenDelayMs)
   }
@@ -147,7 +161,7 @@ export function ControlledPopover({
     clearOpenTimer()
     clearCloseTimer()
     if (immediate || resolvedCloseDelayMs <= 0) {
-      setOpen(false)
+      handleOpenChange(false)
       return
     }
     closeTimerRef.current = setTimeout(() => {
@@ -155,7 +169,7 @@ export function ControlledPopover({
         closeTimerRef.current = null
         return
       }
-      setOpen(false)
+      handleOpenChange(false)
       closeTimerRef.current = null
     }, resolvedCloseDelayMs)
   }
@@ -179,7 +193,7 @@ export function ControlledPopover({
   const supportsClick = resolvedBehavior === "click" || resolvedBehavior === "hybrid"
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen} modal={resolvedModal}>
+    <Popover.Root open={open} onOpenChange={handleOpenChange} modal={resolvedModal}>
       <Popover.Trigger asChild>
         <span
           ref={triggerWrapperRef}

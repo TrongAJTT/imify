@@ -21,7 +21,7 @@ import {
 } from "@imify/core";
 import { usePatternStore } from "@imify/stores/stores/pattern-store";
 import { toast } from "@imify/stores";
-import { useShortcutActions } from "../filling/use-shortcut-actions";
+import { useShortcutActions } from "../shared/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { Button } from "@imify/ui";
 import { ZoomPanControl } from "@imify/ui";

@@ -3,7 +3,7 @@ import { Image as ImageIcon } from "lucide-react";
 import type { ResizeQuickStats } from "@imify/core/resize-quick-stats";
 import type { ResizeApplyTo } from "@imify/core/types";
 import { NumberInput, ColorPickerPopover, AccordionCard } from "@imify/ui";
-import { ResizeCard } from "../processor/resize-card";
+import { ResizeCardContent } from "../processor/resize-card";
 import type { SplicingImageResize } from "./types";
 
 interface ImageSettingsAccordionProps {
@@ -25,7 +25,7 @@ interface ImageSettingsAccordionProps {
   onImageBorderRadiusChange: (value: number) => void;
   onImageBorderWidthChange: (value: number) => void;
   onImageBorderColorChange: (value: string) => void;
-  onImageResizeOpenChange: (open: boolean) => void;
+  onImageResizeOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -52,7 +52,6 @@ export function ImageSettingsAccordion({
   onImageBorderRadiusChange,
   onImageBorderWidthChange,
   onImageBorderColorChange,
-  onImageResizeOpenChange,
 }: ImageSettingsAccordionProps) {
   const { t } = useTranslation("splicing");
   // Dynamic sublabel showing resize mode and padding
@@ -84,8 +83,8 @@ export function ImageSettingsAccordion({
       defaultOpen={true}
     >
       <div className="space-y-3 pt-1">
-        {/* Image Resize Card */}
-        <ResizeCard
+        {/* Image Resize Content */}
+        <ResizeCardContent
           resizeMode={imageResize}
           resizeValue={imageFitValue}
           resizeApplyTo={imageApplyTo}
@@ -96,8 +95,6 @@ export function ImageSettingsAccordion({
           onResizeValueChange={onImageFitValueChange}
           onResizeApplyToChange={onImageApplyToChange}
           availableModes={["inherit", "fit_value", "zoom_min", "zoom_max"]}
-          alwaysOpen
-          onOpenChange={onImageResizeOpenChange}
         />
 
         <div className="grid grid-cols-3 gap-2 items-end">

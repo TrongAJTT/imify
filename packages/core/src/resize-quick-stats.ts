@@ -7,6 +7,8 @@ export interface ResizeQuickStatTriplet {
 export interface ResizeQuickStats {
   width: ResizeQuickStatTriplet | null
   height: ResizeQuickStatTriplet | null
+  shortest: ResizeQuickStatTriplet | null
+  longest: ResizeQuickStatTriplet | null
 }
 
 function toTriplet(values: number[]): ResizeQuickStatTriplet | null {
@@ -28,16 +30,37 @@ function toTriplet(values: number[]): ResizeQuickStatTriplet | null {
 export function buildResizeQuickStatsFromDimensions(
   dimensions: Array<{ width?: number | null; height?: number | null }>
 ): ResizeQuickStats {
-  const widthValues = dimensions
-    .map((item) => item.width)
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0)
+  const widthValues: number[] = []
+  const heightValues: number[] = []
+  const shortestValues: number[] = []
+  const longestValues: number[] = []
 
-  const heightValues = dimensions
-    .map((item) => item.height)
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0)
+  for (const item of dimensions) {
+    const hasW = typeof item.width === "number" && Number.isFinite(item.width) && item.width > 0
+    const hasH = typeof item.height === "number" && Number.isFinite(item.height) && item.height > 0
+
+    if (hasW) {
+      widthValues.push(item.width!)
+    }
+    if (hasH) {
+      heightValues.push(item.height!)
+    }
+    if (hasW && hasH) {
+      shortestValues.push(Math.min(item.width!, item.height!))
+      longestValues.push(Math.max(item.width!, item.height!))
+    } else if (hasW) {
+      shortestValues.push(item.width!)
+      longestValues.push(item.width!)
+    } else if (hasH) {
+      shortestValues.push(item.height!)
+      longestValues.push(item.height!)
+    }
+  }
 
   return {
     width: toTriplet(widthValues),
-    height: toTriplet(heightValues)
+    height: toTriplet(heightValues),
+    shortest: toTriplet(shortestValues),
+    longest: toTriplet(longestValues)
   }
 }

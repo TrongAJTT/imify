@@ -1,8 +1,8 @@
-import React from "react"
-import { ICO_SIZE_OPTIONS } from "@imify/core/format-config"
-import { LabelText, CheckboxCard } from "@imify/ui"
-import { Gift, Sparkles } from "lucide-react"
-import { useTranslation } from "@imify/i18n"
+import React from "react";
+import { ICO_SIZE_OPTIONS } from "@imify/core/format-config";
+import { LabelText, CheckboxCard } from "@imify/ui";
+import { Gift, Sparkles } from "lucide-react";
+import { useTranslation } from "@imify/i18n";
 
 export function IcoSizeSelector({
   sizes,
@@ -12,22 +12,22 @@ export function IcoSizeSelector({
   title = "ICO output sizes",
   onToggleSize,
   onToggleWebKit,
-  onToggleOptimizeInternalPngLayers = () => undefined
+  onToggleOptimizeInternalPngLayers = () => undefined,
 }: {
-  sizes: number[]
-  generateWebIconKit: boolean
-  optimizeInternalPngLayers?: boolean
-  disabled?: boolean
-  title?: string
-  onToggleSize: (size: number) => void
-  onToggleWebKit: (next: boolean) => void
-  onToggleOptimizeInternalPngLayers?: (next: boolean) => void
+  sizes: number[];
+  generateWebIconKit: boolean;
+  optimizeInternalPngLayers?: boolean;
+  disabled?: boolean;
+  title?: string;
+  onToggleSize: (size: number) => void;
+  onToggleWebKit: (next: boolean) => void;
+  onToggleOptimizeInternalPngLayers?: (next: boolean) => void;
 }) {
-  const { t } = useTranslation("processor")
+  const { t } = useTranslation("processor");
   return (
     <div className="space-y-2">
       <LabelText className="text-xs">{title}</LabelText>
-      
+
       <div className="grid grid-cols-2 gap-2">
         {ICO_SIZE_OPTIONS.map((option) => (
           <CheckboxCard
@@ -37,7 +37,7 @@ export function IcoSizeSelector({
             onChange={() => onToggleSize(option.value)}
             title={option.label}
             subtitle={option.note}
-            theme="blue"
+            colorTheme="blue"
           />
         ))}
       </div>
@@ -50,7 +50,7 @@ export function IcoSizeSelector({
           onChange={onToggleWebKit}
           title="Generate Web Toolkit"
           tooltipContent={t("tooltipGenerateWebToolkit")}
-          theme="amber"
+          colorTheme="amber"
         />
 
         <div className="mt-2">
@@ -62,12 +62,10 @@ export function IcoSizeSelector({
             title="Optimize internal PNG layers"
             subtitle="Smaller file size"
             tooltipContent={t("tooltipOptimizeInternalPngLayers")}
-            theme="blue"
+            colorTheme="blue"
           />
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-

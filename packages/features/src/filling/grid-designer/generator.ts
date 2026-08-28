@@ -1,6 +1,7 @@
 import {
   generateId,
   type GridDesignParams,
+  type GridPrimaryDirection,
   type Point2D,
   type TextLayer,
   type VectorLayer,
@@ -737,6 +738,60 @@ function buildGridCellsFromParsed(grid: ParsedGridCell[][], mergedCellIds: Set<s
   )
 }
 
+function areCellsAdjacent(
+  cellA: BaseLayoutCell,
+  cellB: BaseLayoutCell,
+  gapX: number,
+  gapY: number,
+  allCells: BaseLayoutCell[]
+): boolean {
+  // 1. Horizontal adjacency check
+  const yOverlapStart = Math.max(cellA.y, cellB.y)
+  const yOverlapEnd = Math.min(cellA.y + cellA.height, cellB.y + cellB.height)
+  if (yOverlapEnd - yOverlapStart > EPSILON) {
+    const left = cellA.x < cellB.x ? cellA : cellB
+    const right = cellA.x < cellB.x ? cellB : cellA
+    const gapDist = right.x - (left.x + left.width)
+    if (gapDist > -EPSILON && gapDist <= gapX + 1.5) {
+      const hasIntervening = allCells.some(
+        (c) =>
+          c.id !== cellA.id &&
+          c.id !== cellB.id &&
+          c.x >= left.x + left.width - EPSILON &&
+          c.x + c.width <= right.x + EPSILON &&
+          Math.min(c.y + c.height, yOverlapEnd) - Math.max(c.y, yOverlapStart) > EPSILON
+      )
+      if (!hasIntervening) {
+        return true
+      }
+    }
+  }
+
+  // 2. Vertical adjacency check
+  const xOverlapStart = Math.max(cellA.x, cellB.x)
+  const xOverlapEnd = Math.min(cellA.x + cellA.width, cellB.x + cellB.width)
+  if (xOverlapEnd - xOverlapStart > EPSILON) {
+    const top = cellA.y < cellB.y ? cellA : cellB
+    const bottom = cellA.y < cellB.y ? cellB : cellA
+    const gapDist = bottom.y - (top.y + top.height)
+    if (gapDist > -EPSILON && gapDist <= gapY + 1.5) {
+      const hasIntervening = allCells.some(
+        (c) =>
+          c.id !== cellA.id &&
+          c.id !== cellB.id &&
+          c.y >= top.y + top.height - EPSILON &&
+          c.y + c.height <= bottom.y + EPSILON &&
+          Math.min(c.x + c.width, xOverlapEnd) - Math.max(c.x, xOverlapStart) > EPSILON
+      )
+      if (!hasIntervening) {
+        return true
+      }
+    }
+  }
+
+  return false
+}
+
 function buildChainedLayoutCells(
   baseCells: BaseLayoutCell[],
   isColsMode: boolean,
@@ -768,6 +823,9 @@ function buildChainedLayoutCells(
     parent.set(cell.id, cell.id)
   }
 
+  const gapX = resolveGapX(params)
+  const gapY = resolveGapY(params)
+
   // Connect pairs of cells sharing at least one indicator
   for (let i = 0; i < baseCells.length; i++) {
     const cellA = baseCells[i]!
@@ -798,6 +856,12 @@ function buildChainedLayoutCells(
 
       // If on the same primary axis, check if primary axis merge is enabled
       if (isSamePrimaryAxis && !ENABLE_PRIMARY_AXIS_MERGE) {
+        continue
+      }
+
+      // For non-convex hull merges, only connect if cells are spatially adjacent (touching / directly contiguous)
+      const isConvex = cellA.isConvex || cellB.isConvex
+      if (!isConvex && !areCellsAdjacent(cellA, cellB, gapX, gapY, baseCells)) {
         continue
       }
 
@@ -1238,5 +1302,296 @@ export function generateGridTemplate(
 export function generateGridLayers(params: GridDesignParams, canvasWidth: number, canvasHeight: number): VectorLayer[] {
   return generateGridTemplate(params, canvasWidth, canvasHeight).layers
 }
+
+export interface GridRowBounds {
+  index: number
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export function canReorderGridRows(
+  result: GridParseResult,
+  params: GridDesignParams,
+): { allowed: boolean; reason?: string } {
+  if (params.uniformColumns) {
+    return { allowed: false, reason: "uniform_columns" }
+  }
+
+  const count = clampPositiveInt(params.rowCount, 1)
+  if (count <= 1) {
+    return { allowed: false, reason: "single_row" }
+  }
+
+  // Check if any cell has syntax errors
+  const allCells = result.cells.flat()
+  if (allCells.some((c) => c.hasError)) {
+    return { allowed: false, reason: "has_syntax_errors" }
+  }
+
+  // Check if convex hull is explicitly requested (suffix 'C')
+  if (allCells.some((c) => c.isConvex) || result.layoutCells.some((c) => c.isConvex)) {
+    return { allowed: false, reason: "has_convex_hull" }
+  }
+
+  return { allowed: true }
+}
+
+export function computeGridRowBounds(
+  params: GridDesignParams,
+  canvasWidth: number,
+  canvasHeight: number,
+): GridRowBounds[] {
+  const isColsMode = params.direction === "cols"
+  const primaryCount = clampPositiveInt(params.rowCount, 1)
+  const outerPadding = Math.max(0, Math.round(params.outerPadding))
+  const gapX = resolveGapX(params)
+  const gapY = resolveGapY(params)
+
+  const innerWidth = Math.max(1, canvasWidth - outerPadding * 2)
+  const innerHeight = Math.max(1, canvasHeight - outerPadding * 2)
+
+  const boundsList: GridRowBounds[] = []
+
+  if (isColsMode) {
+    const colGapTotal = gapX * Math.max(0, primaryCount - 1)
+    const colWidth = Math.max(1, (innerWidth - colGapTotal) / primaryCount)
+
+    for (let i = 0; i < primaryCount; i++) {
+      const colLeft = outerPadding + i * (colWidth + gapX)
+      boundsList.push({
+        index: i,
+        x: Math.round(colLeft * 1000) / 1000,
+        y: outerPadding,
+        width: Math.round(colWidth * 1000) / 1000,
+        height: innerHeight,
+      })
+    }
+  } else {
+    const rowGapTotal = gapY * Math.max(0, primaryCount - 1)
+    const rowHeight = Math.max(1, (innerHeight - rowGapTotal) / primaryCount)
+
+    for (let i = 0; i < primaryCount; i++) {
+      const rowTop = outerPadding + i * (rowHeight + gapY)
+      boundsList.push({
+        index: i,
+        x: outerPadding,
+        y: Math.round(rowTop * 1000) / 1000,
+        width: innerWidth,
+        height: Math.round(rowHeight * 1000) / 1000,
+      })
+    }
+  }
+
+  return boundsList
+}
+
+export interface GridRowGroup {
+  id: string
+  startRow: number
+  endRow: number
+  rowIndices: number[]
+  isMerged: boolean
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export function computeGridRowGroups(
+  result: GridParseResult,
+  params: GridDesignParams,
+  canvasWidth: number,
+  canvasHeight: number,
+): GridRowGroup[] {
+  const rowBounds = computeGridRowBounds(params, canvasWidth, canvasHeight)
+  const count = rowBounds.length
+  if (count === 0) return []
+
+  const isColsMode = params.direction === "cols"
+  const parent = Array.from({ length: count }, (_, i) => i)
+  const find = (i: number): number => {
+    if (parent[i] === i) return i
+    parent[i] = find(parent[i]!)
+    return parent[i]!
+  }
+  const union = (i: number, j: number) => {
+    const rootI = find(i)
+    const rootJ = find(j)
+    if (rootI !== rootJ) {
+      parent[rootI] = rootJ
+    }
+  }
+
+  // Connect rows/cols that share a merged layout cell
+  for (const cell of result.layoutCells) {
+    const spannedIndices: number[] = []
+    for (let r = 0; r < count; r++) {
+      const b = rowBounds[r]!
+      if (isColsMode) {
+        if (cell.x <= b.x + b.width - EPSILON && cell.x + cell.width >= b.x + EPSILON) {
+          spannedIndices.push(r)
+        }
+      } else {
+        if (cell.y <= b.y + b.height - EPSILON && cell.y + cell.height >= b.y + EPSILON) {
+          spannedIndices.push(r)
+        }
+      }
+    }
+
+    if (spannedIndices.length > 1) {
+      for (let k = 1; k < spannedIndices.length; k++) {
+        union(spannedIndices[0]!, spannedIndices[k]!)
+      }
+    }
+  }
+
+  // Group row indices by root
+  const groupMap = new Map<number, number[]>()
+  for (let i = 0; i < count; i++) {
+    const root = find(i)
+    const list = groupMap.get(root) ?? []
+    list.push(i)
+    groupMap.set(root, list)
+  }
+
+  const groups: GridRowGroup[] = []
+  for (const [, indices] of groupMap) {
+    indices.sort((a, b) => a - b)
+    const startRow = indices[0]!
+    const endRow = indices[indices.length - 1]!
+
+    let minX = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+
+    for (const idx of indices) {
+      const b = rowBounds[idx]!
+      minX = Math.min(minX, b.x)
+      maxX = Math.max(maxX, b.x + b.width)
+      minY = Math.min(minY, b.y)
+      maxY = Math.max(maxY, b.y + b.height)
+    }
+
+    groups.push({
+      id: `group-${startRow}-${endRow}`,
+      startRow,
+      endRow,
+      rowIndices: indices,
+      isMerged: indices.length > 1,
+      x: minX,
+      y: minY,
+      width: Math.max(0, maxX - minX),
+      height: Math.max(0, maxY - minY),
+    })
+  }
+
+  groups.sort((a, b) => a.startRow - b.startRow)
+  return groups
+}
+
+export function canReverseDefinition(def: string | undefined): boolean {
+  if (!def) return false
+  const trimmed = def.trim()
+  if (!trimmed || trimmed === "=" || trimmed === "-") return false
+  const tokens = trimmed.split(/\s+/).filter(Boolean)
+  return tokens.length > 1
+}
+
+export function reverseDefinitionTokens(def: string): string {
+  const trimmed = def.trim()
+  if (!trimmed || trimmed === "=" || trimmed === "-") return def
+  const tokens = trimmed.split(/\s+/).filter(Boolean)
+  if (tokens.length <= 1) return def
+  return tokens.reverse().join(" ")
+}
+
+export function hasReversibleGridDefinition(params: GridDesignParams): boolean {
+  if (params.uniformColumns) {
+    return canReverseDefinition(params.uniformColumnsDef)
+  }
+  return params.rowDefinitions.some((def) => canReverseDefinition(def))
+}
+
+export function reverseSingleGridDefinition(
+  params: GridDesignParams,
+  rowIndex: number,
+): GridDesignParams {
+  const count = clampPositiveInt(params.rowCount, 1)
+  const currentDefs = Array.from(
+    { length: count },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  )
+  const target = currentDefs[rowIndex]
+  if (target === undefined) return params
+  currentDefs[rowIndex] = reverseDefinitionTokens(target)
+  return {
+    ...params,
+    rowDefinitions: currentDefs,
+  }
+}
+
+export function reverseAllGridDefinitions(
+  params: GridDesignParams,
+): GridDesignParams {
+  if (params.uniformColumns) {
+    return {
+      ...params,
+      uniformColumnsDef: reverseDefinitionTokens(params.uniformColumnsDef),
+    }
+  }
+  const count = clampPositiveInt(params.rowCount, 1)
+  const currentDefs = Array.from(
+    { length: count },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  )
+  const nextDefs = currentDefs.map((def) => reverseDefinitionTokens(def))
+  return {
+    ...params,
+    rowDefinitions: nextDefs,
+  }
+}
+
+export function reorderGridDefinitions(
+  params: GridDesignParams,
+  fromStart: number,
+  fromEnd: number,
+  toIndex: number,
+): GridDesignParams {
+  const count = clampPositiveInt(params.rowCount, 1)
+  const currentDefs = Array.from(
+    { length: count },
+    (_, index) => params.rowDefinitions[index] ?? "",
+  )
+
+  const moveCount = fromEnd - fromStart + 1
+  const movingItems = currentDefs.splice(fromStart, moveCount)
+
+  let targetIndex = toIndex
+  if (targetIndex > fromStart) {
+    targetIndex = targetIndex - moveCount
+  }
+  targetIndex = Math.max(0, Math.min(currentDefs.length, targetIndex))
+
+  currentDefs.splice(targetIndex, 0, ...movingItems)
+
+  return {
+    ...params,
+    rowDefinitions: currentDefs,
+  }
+}
+
+export function toggleGridDirection(
+  params: GridDesignParams,
+): GridDesignParams {
+  return {
+    ...params,
+    direction: params.direction === "cols" ? "rows" : "cols",
+  }
+}
+
+
 
 

@@ -68,7 +68,7 @@ export function PatternSidebarPanel({
           fileNamePattern={fileNamePattern}
           onFileNamePatternChange={setFileNamePattern}
           namingConfig={PATTERN_NAMING_CONFIG}
-          theme="amber"
+          colorTheme="amber"
         />
       ),
     },

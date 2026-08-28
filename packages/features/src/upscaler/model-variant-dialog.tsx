@@ -44,7 +44,7 @@ export function ModelVariantDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-3xl w-full"
+      size="3xl"
       contentClassName="p-6 flex flex-col gap-6 max-h-[85vh] overflow-y-auto"
     >
       <div className="contents" onClick={(event) => event.stopPropagation()}>

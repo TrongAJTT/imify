@@ -18,13 +18,12 @@ import {
 } from "../shared/media-assets";
 import { FeatureMarkdown } from "../shared/feature-markdown";
 import { useTranslation } from "@imify/i18n";
+import { useDialogMobileBreakpoint } from "./desktop-layout";
 
 interface ChangelogsDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX = 599;
 
 export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
   const { t } = useTranslation("about");
@@ -35,18 +34,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [isMobileDialog, setIsMobileDialog] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia(
-      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`,
-    );
-    const handleResize = () => setIsMobileDialog(media.matches);
-    handleResize();
-    media.addEventListener("change", handleResize);
-    return () => media.removeEventListener("change", handleResize);
-  }, []);
+  const isMobileDialog = useDialogMobileBreakpoint();
 
   // When dialog opens, reset active version to latest and clear state
   useEffect(() => {
@@ -140,25 +128,14 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
+      size="5xl"
+      mobileFullscreen
       contentClassName={
         isMobileDialog
-          ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
-          : "relative flex h-[720px] w-full max-w-4xl min-h-0 overflow-hidden rounded-xl bg-white dark:bg-slate-900"
+          ? "flex h-full w-full overflow-hidden flex-col"
+          : "flex h-[86vh] w-full min-h-0 overflow-hidden bg-white dark:bg-slate-900"
       }
     >
-      {/* Top Close Button (Desktop Only) */}
-      {!isMobileDialog && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-3 top-3 z-20 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          onClick={onClose}
-          aria-label={t("changelogsDialog.close", "Close")}
-        >
-          <X size={18} />
-        </Button>
-      )}
-
       {/* Left Sidebar: Versions List */}
       {(!isMobileDialog || !activeVersion) && (
         <div
@@ -168,9 +145,7 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
               : "w-56 border-r pt-6 pb-4"
           }`}
         >
-          <div
-            className={`px-4 ${isMobileDialog ? "mb-4 flex items-center justify-between" : "mb-6"}`}
-          >
+          <div className={`px-4 ${isMobileDialog ? "mb-4" : "mb-6"}`}>
             <div>
               <Subheading className="text-xl font-bold text-slate-800 dark:text-slate-100">
                 {t("changelogsDialog.title", "Changelogs")}
@@ -184,17 +159,6 @@ export function ChangelogsDialog({ isOpen, onClose }: ChangelogsDialogProps) {
                 </MutedText>
               )}
             </div>
-            {isMobileDialog && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={onClose}
-                aria-label={t("changelogsDialog.close", "Close")}
-              >
-                <X size={18} />
-              </Button>
-            )}
           </div>
 
           <nav className="flex-1 px-3 space-y-1 overflow-y-auto">

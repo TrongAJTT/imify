@@ -107,6 +107,9 @@ export function SplicingLandingPage() {
     (state) => state.updatePresetMeta,
   );
   const deletePreset = useSplicingPresetStore((state) => state.deletePreset);
+  const togglePinPreset = useSplicingPresetStore(
+    (state) => state.togglePinPreset,
+  );
   const presets = useSplicingPresetStore((state) => state.presets);
   const isRehydrated = useSplicingPresetHydrated();
   const previewQualityHandlerRef = useRef<((next: number) => void) | null>(
@@ -179,6 +182,7 @@ export function SplicingLandingPage() {
       }}
       onUpdatePresetMeta={updatePresetMeta}
       onDeletePreset={deletePreset}
+      onTogglePinPreset={togglePinPreset}
     />
   );
 }

@@ -177,20 +177,11 @@ export function AboutDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      contentClassName="w-full max-w-3xl rounded-2xl p-6 md:p-8 relative"
-    >
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-4 right-4 rounded-full border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 z-10"
-        onClick={onClose}
-        aria-label="Close about dialog"
-      >
-        <X size={16} />
-      </Button>
-
-      <div className="flex flex-col gap-8">
-        <div className="flex items-center gap-6">
+      size="3xl"
+      mobileFullscreen
+      contentClassName="p-6 md:p-8"
+      header={
+        <div className="flex items-center gap-4 pb-2 md:pb-6">
           <button
             type="button"
             onClick={handleIconClick}
@@ -261,7 +252,10 @@ export function AboutDialog({
             </div>
           </div>
         </div>
-
+      }
+      stickyHeader
+    >
+      <div className="flex flex-col gap-8 pt-2 md:pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 dark:text-slate-300">
           <div className="space-y-4">
             <Kicker className="text-xs tracking-widest">

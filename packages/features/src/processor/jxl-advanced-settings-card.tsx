@@ -61,7 +61,7 @@ export function JxlAdvancedSettingsCard({
           checked={progressive}
           onChange={onProgressiveChange}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
 
         <SelectInput

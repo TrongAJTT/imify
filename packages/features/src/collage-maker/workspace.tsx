@@ -28,6 +28,7 @@ import {
   COMMON_IMAGE_ACCEPT,
   isCommonImageFile,
 } from "@imify/features/shared/image-file-utils";
+import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 
 import type {
   CanvasSizeUnit,
@@ -110,7 +111,9 @@ export function CollageMakerWorkspace({
   const canvasDpi = useCollageMakerStore((s) => s.canvasDpi);
   const setCanvasDpi = useCollageMakerStore((s) => s.setCanvasDpi);
   const selectedLayoutId = useCollageMakerStore((s) => s.selectedLayoutId);
-  const setSelectedLayoutId = useCollageMakerStore((s) => s.setSelectedLayoutId);
+  const setSelectedLayoutId = useCollageMakerStore(
+    (s) => s.setSelectedLayoutId,
+  );
   const gridParams = useCollageMakerStore((s) => s.gridParams);
   const setGridParams = useCollageMakerStore((s) => s.setGridParams);
 
@@ -198,6 +201,14 @@ export function CollageMakerWorkspace({
     queueImages.forEach((img) => URL.revokeObjectURL(img.previewUrl));
     setQueueImages([]);
   }, [queueImages]);
+
+  useClipboardImageIntake({
+    enabled: stage === 1,
+    mode: "multiple",
+    onImages: (files) => {
+      handleFilesAdded(files);
+    },
+  });
 
   const handleRemoveImage = useCallback((id: string) => {
     setQueueImages((prev) => {
@@ -454,13 +465,7 @@ export function CollageMakerWorkspace({
             )}
           </div>
 
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (e.dataTransfer.files) handleFilesAdded(e.dataTransfer.files);
-            }}
-          >
+          <div>
             <EmptyDropCard
               icon={<Upload size={28} className="text-amber-500" />}
               iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
@@ -468,16 +473,18 @@ export function CollageMakerWorkspace({
               subtitle={t("stage1.dropzoneSubtitle", {
                 max: MAX_COLLAGE_IMAGES,
               })}
-              onClick={() => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.multiple = true;
-                input.accept = COMMON_IMAGE_ACCEPT;
-                input.onchange = (e) => {
-                  const target = e.target as HTMLInputElement;
-                  if (target.files) handleFilesAdded(target.files);
-                };
-                input.click();
+              onDropFiles={(files) => {
+                if (files) handleFilesAdded(files);
+              }}
+              onPasteFiles={(files) => {
+                if (files.length) handleFilesAdded(files);
+              }}
+              fileInput={{
+                accept: COMMON_IMAGE_ACCEPT,
+                multiple: true,
+                onInputFiles: (files) => {
+                  if (files) handleFilesAdded(files);
+                },
               }}
             />
           </div>
@@ -528,6 +535,8 @@ export function CollageMakerWorkspace({
         <GridDesignWorkspace
           template={generatedTemplate}
           onRefresh={async () => {}}
+          allowReverseRow={false}
+          allowDetachSubRows={false}
           customActions={
             <Button
               variant="primary"

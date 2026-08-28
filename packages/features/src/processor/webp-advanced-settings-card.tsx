@@ -1,19 +1,19 @@
-import React from "react"
-import { Sparkles, ShieldCheck, Palette } from "lucide-react"
+import React from "react";
+import { Sparkles, ShieldCheck, Palette } from "lucide-react";
 
-import { AccordionCard, CheckboxCard } from "@imify/ui"
-import { useTranslation } from "@imify/i18n"
+import { AccordionCard, CheckboxCard } from "@imify/ui";
+import { useTranslation } from "@imify/i18n";
 
 export interface WebpAdvancedSettingsCardProps {
-  sharpYuv: boolean
-  preserveExactAlpha: boolean
-  onSharpYuvChange: (value: boolean) => void
-  onPreserveExactAlphaChange: (value: boolean) => void
-  disabled?: boolean
-  isOpen?: boolean
-  onOpenChange?: (open: boolean) => void
-  alwaysOpen?: boolean
-  groupId?: string
+  sharpYuv: boolean;
+  preserveExactAlpha: boolean;
+  onSharpYuvChange: (value: boolean) => void;
+  onPreserveExactAlphaChange: (value: boolean) => void;
+  disabled?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  alwaysOpen?: boolean;
+  groupId?: string;
 }
 
 export function WebpAdvancedSettingsCard({
@@ -25,20 +25,20 @@ export function WebpAdvancedSettingsCard({
   isOpen,
   onOpenChange,
   alwaysOpen,
-  groupId
+  groupId,
 }: WebpAdvancedSettingsCardProps) {
-  const { t } = useTranslation("processor")
-  const tags: string[] = []
+  const { t } = useTranslation("processor");
+  const tags: string[] = [];
 
   if (sharpYuv) {
-    tags.push(t("sharpYuv"))
+    tags.push(t("sharpYuv"));
   }
 
   if (preserveExactAlpha) {
-    tags.push(t("exactAlpha"))
+    tags.push(t("exactAlpha"));
   }
 
-  const sublabel = tags.length ? tags.join(" • ") : t("webpAdvancedSublabel")
+  const sublabel = tags.length ? tags.join(" • ") : t("webpAdvancedSublabel");
 
   return (
     <AccordionCard
@@ -60,7 +60,7 @@ export function WebpAdvancedSettingsCard({
           checked={sharpYuv}
           onChange={onSharpYuvChange}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
 
         <CheckboxCard
@@ -70,9 +70,9 @@ export function WebpAdvancedSettingsCard({
           checked={preserveExactAlpha}
           onChange={onPreserveExactAlphaChange}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
       </div>
     </AccordionCard>
-  )
+  );
 }

@@ -63,6 +63,9 @@ function extractSplicingPresetConfig(
     exportFileNamePattern: exportSettings.fileNamePattern,
     previewQualityPercent,
     previewShowImageNumber,
+    caption: captionConfig
+      ? { ...captionConfig }
+      : { ...DEFAULT_SPLICING_CAPTION_CONFIG },
     captionMode: captionConfig?.mode ?? DEFAULT_SPLICING_CAPTION_CONFIG.mode,
     captionFontFamily:
       captionConfig?.fontFamily ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
@@ -107,8 +110,7 @@ function extractSplicingPresetConfig(
       captionConfig?.offsetPaddingMultiplier ??
       DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
     captionRotate180:
-      captionConfig?.rotate180 ??
-      DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
+      captionConfig?.rotate180 ?? DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
   };
 }
 
@@ -144,53 +146,59 @@ function applySplicingPresetConfig(config: SplicingPresetConfig): void {
       borderWidth: config.imageBorderWidth ?? 0,
       borderColor: config.imageBorderColor ?? "#000000",
     },
-    captionConfig: {
-      mode: config.captionMode ?? DEFAULT_SPLICING_CAPTION_CONFIG.mode,
-      fontFamily:
-        config.captionFontFamily ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
-      fontSize:
-        config.captionFontSize ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
-      textColor:
-        config.captionTextColor ?? DEFAULT_SPLICING_CAPTION_CONFIG.textColor,
-      paddingV:
-        config.captionPaddingV ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingV,
-      paddingH:
-        config.captionPaddingH ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingH,
-      paddingLinked:
-        config.captionPaddingLinked ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.paddingLinked,
-      containerColor:
-        config.captionContainerColor ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
-      containerOpacity:
-        config.captionContainerOpacity ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.containerOpacity,
-      borderRadius:
-        config.captionBorderRadius ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
-      position:
-        config.captionPosition ?? DEFAULT_SPLICING_CAPTION_CONFIG.position,
-      alignment:
-        config.captionAlignment ?? DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
-      offsetX: config.captionOffsetX ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
-      offsetY: config.captionOffsetY ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
-      offsetLockMode:
-        config.captionOffsetLockMode ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.offsetLockMode,
-      offsetFontSizeMultiplier:
-        config.captionOffsetFontSizeMultiplier ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.offsetFontSizeMultiplier,
-      offsetPaddingSource:
-        config.captionOffsetPaddingSource ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingSource,
-      offsetPaddingMultiplier:
-        config.captionOffsetPaddingMultiplier ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
-      rotate180:
-        config.captionRotate180 ??
-        DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
-    },
-
+    captionConfig: config.caption
+      ? { ...DEFAULT_SPLICING_CAPTION_CONFIG, ...config.caption }
+      : {
+          mode: config.captionMode ?? DEFAULT_SPLICING_CAPTION_CONFIG.mode,
+          fontFamily:
+            config.captionFontFamily ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.fontFamily,
+          fontSize:
+            config.captionFontSize ?? DEFAULT_SPLICING_CAPTION_CONFIG.fontSize,
+          textColor:
+            config.captionTextColor ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.textColor,
+          paddingV:
+            config.captionPaddingV ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingV,
+          paddingH:
+            config.captionPaddingH ?? DEFAULT_SPLICING_CAPTION_CONFIG.paddingH,
+          paddingLinked:
+            config.captionPaddingLinked ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.paddingLinked,
+          containerColor:
+            config.captionContainerColor ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.containerColor,
+          containerOpacity:
+            config.captionContainerOpacity ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.containerOpacity,
+          borderRadius:
+            config.captionBorderRadius ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.borderRadius,
+          position:
+            config.captionPosition ?? DEFAULT_SPLICING_CAPTION_CONFIG.position,
+          alignment:
+            config.captionAlignment ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.alignment,
+          offsetX:
+            config.captionOffsetX ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetX,
+          offsetY:
+            config.captionOffsetY ?? DEFAULT_SPLICING_CAPTION_CONFIG.offsetY,
+          offsetLockMode:
+            config.captionOffsetLockMode ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.offsetLockMode,
+          offsetFontSizeMultiplier:
+            config.captionOffsetFontSizeMultiplier ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.offsetFontSizeMultiplier,
+          offsetPaddingSource:
+            config.captionOffsetPaddingSource ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingSource,
+          offsetPaddingMultiplier:
+            config.captionOffsetPaddingMultiplier ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.offsetPaddingMultiplier,
+          rotate180:
+            config.captionRotate180 ??
+            DEFAULT_SPLICING_CAPTION_CONFIG.rotate180,
+        },
 
     exportSettings: {
       format: (config.exportFormat as any) ?? "png",
@@ -233,6 +241,9 @@ export function SplicingWorkspaceShell({
     (state) => state.updatePresetMeta,
   );
   const deletePreset = useSplicingPresetStore((state) => state.deletePreset);
+  const togglePinPreset = useSplicingPresetStore(
+    (state) => state.togglePinPreset,
+  );
   const syncActivePresetConfig = useSplicingPresetStore(
     (state) => state.syncActivePresetConfig,
   );
@@ -345,6 +356,7 @@ export function SplicingWorkspaceShell({
         }}
         onUpdatePresetMeta={updatePresetMeta}
         onDeletePreset={deletePreset}
+        onTogglePinPreset={togglePinPreset}
       />
     );
   }

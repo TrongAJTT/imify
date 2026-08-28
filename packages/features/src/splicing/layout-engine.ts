@@ -67,12 +67,26 @@ export function calculateProcessedSize(
   return { width: targetWidth, height: targetHeight }
 }
 
-function resolveCaptionExtras(captionConfig?: SplicingCaptionConfig): CaptionExtras {
+function resolveCaptionExtras(
+  captionConfig?: SplicingCaptionConfig,
+  captionText?: string
+): CaptionExtras {
   if (!captionConfig || captionConfig.mode !== "outside") {
     return { top: 0, bottom: 0, left: 0, right: 0 }
   }
 
-  const thickness = Math.max(1, captionConfig.fontSize + captionConfig.paddingV * 2)
+  const lines =
+    captionText !== undefined && captionText.trim() !== ""
+      ? captionText.split("\n")
+      : [""]
+  const lineCount = Math.max(1, lines.length)
+  const lineHeight = captionConfig.fontSize * 1.25
+  const thickness = Math.max(
+    1,
+    captionConfig.fontSize +
+      (lineCount - 1) * lineHeight +
+      captionConfig.paddingV * 2
+  )
 
   switch (captionConfig.position) {
     case "top":
@@ -108,13 +122,28 @@ function processImages(
   resize: SplicingImageResize,
   fitValue: number,
   applyTo?: ResizeApplyTo,
-  captionConfig?: SplicingCaptionConfig
+  captionConfig?: SplicingCaptionConfig,
+  captionTexts?: Record<string, string>,
+  imageIds?: string[]
 ): ProcessedImage[] {
-  const extras = resolveCaptionExtras(captionConfig)
-
-  return images.map((img) => {
-    const content = calculateProcessedSize(img.width, img.height, resize, fitValue, applyTo)
-    const outer = calculateOuterSize(content.width, content.height, style, extras)
+  return images.map((img, i) => {
+    const imageId = imageIds?.[i]
+    const customText =
+      imageId && captionTexts ? captionTexts[imageId] : undefined
+    const extras = resolveCaptionExtras(captionConfig, customText)
+    const content = calculateProcessedSize(
+      img.width,
+      img.height,
+      resize,
+      fitValue,
+      applyTo
+    )
+    const outer = calculateOuterSize(
+      content.width,
+      content.height,
+      style,
+      extras
+    )
     return {
       contentWidth: content.width,
       contentHeight: content.height,
@@ -622,14 +651,25 @@ export function calculateLayout(
   imageResize: SplicingImageResize,
   fitValue: number,
   applyTo?: ResizeApplyTo,
-  captionConfig?: SplicingCaptionConfig
+  captionConfig?: SplicingCaptionConfig,
+  captionTexts?: Record<string, string>,
+  imageIds?: string[]
 ): LayoutResult {
   if (images.length === 0) {
     const edge = (canvasStyle.padding + canvasStyle.borderWidth) * 2
     return { groups: [], canvasWidth: Math.max(1, edge), canvasHeight: Math.max(1, edge) }
   }
 
-  const processed = processImages(images, imageStyle, imageResize, fitValue, applyTo, captionConfig)
+  const processed = processImages(
+    images,
+    imageStyle,
+    imageResize,
+    fitValue,
+    applyTo,
+    captionConfig,
+    captionTexts,
+    imageIds
+  )
   const edgePadding = canvasStyle.padding + canvasStyle.borderWidth
   const isGrid = layout.primaryDirection !== layout.secondaryDirection
 

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 
 export const DESKTOP_BREAKPOINT_PX = 800
 export const DESKTOP_MEDIA_QUERY = `(min-width: ${DESKTOP_BREAKPOINT_PX}px)`
-export const SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX = 599
+export const DIALOG_MOBILE_MAX_WIDTH_PX = 599
+export const SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX = DIALOG_MOBILE_MAX_WIDTH_PX
 
 export function useIsDesktopLayout(): boolean {
   // Keep first render consistent with SSR to avoid hydration mismatch.
@@ -22,3 +23,25 @@ export function useIsDesktopLayout(): boolean {
 
   return isDesktop
 }
+
+/**
+ * Returns true when the viewport width is <= DIALOG_MOBILE_MAX_WIDTH_PX (599px).
+ * Replaces per-dialog matchMedia boilerplate across workspace dialogs.
+ */
+export function useDialogMobileBreakpoint(): boolean {
+  const [isMobile, setIsMobile] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const mediaQueryList = window.matchMedia(`(max-width: ${DIALOG_MOBILE_MAX_WIDTH_PX}px)`)
+    const handleViewportChange = () => setIsMobile(mediaQueryList.matches)
+    handleViewportChange()
+    mediaQueryList.addEventListener("change", handleViewportChange)
+    return () => {
+      mediaQueryList.removeEventListener("change", handleViewportChange)
+    }
+  }, [])
+
+  return isMobile
+}
+

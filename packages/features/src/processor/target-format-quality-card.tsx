@@ -3,7 +3,6 @@ import { IcoSizeSelector } from "./ico-size-selector";
 import { useTranslation } from "@imify/i18n";
 import {
   CheckboxCard,
-  ColoredSliderCard,
   SliderInput,
   SelectInput,
   AccordionCard,
@@ -332,7 +331,7 @@ export function TargetFormatQualityCard({
                 checked={webpLosslessEnabled}
                 onChange={onWebpLosslessChange}
                 disabled={disabled}
-                theme="blue"
+                colorTheme="blue"
               />
             )}
 
@@ -370,7 +369,7 @@ export function TargetFormatQualityCard({
                 checked={jxlLosslessEnabled}
                 onChange={onJxlLosslessChange}
                 disabled={disabled}
-                theme="blue"
+                colorTheme="blue"
               />
             )}
 
@@ -505,7 +504,7 @@ export function TargetFormatQualityCard({
               checked={pngTinyModeEnabled}
               onChange={onPngTinyModeChange}
               disabled={disabled || !supportsTinyMode}
-              theme="blue"
+              colorTheme="blue"
             />
 
             {pngTinyModeEnabled && onPngDitheringLevelChange && (

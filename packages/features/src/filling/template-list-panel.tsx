@@ -1,17 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  Download,
-  Edit,
-  Tag,
-  LayoutGrid,
-  Pin,
-  PinOff,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Pin, Plus, X } from "lucide-react";
 import {
   BaseDialog,
   Button,
@@ -31,6 +21,11 @@ import {
   type TemplateSortMode,
 } from "./types";
 import { resolveLayerShapePoints } from "./shape-generators";
+import { PresetActionToolbar } from "../shared/preset-action-toolbar";
+import {
+  QuickCollageButton,
+  QuickCollageEmptyCard,
+} from "../shared/quick-collage-shortcut";
 
 import { useTranslation } from "@imify/i18n";
 
@@ -128,17 +123,7 @@ export function FillingTemplateListPanel({
           subtitle={t("templateList.noTemplatesDesc")}
           onClick={onCreate}
         />
-        <EmptyDropCard
-          icon={<LayoutGrid size={28} className="text-amber-500" />}
-          iconWrapperClassName="bg-amber-100 dark:bg-amber-900/30 border-transparent shadow-none"
-          title={t("collageMaker:title")}
-          subtitle={t("collageMaker.subtitle", {
-            defaultValue: "Tạo ảnh ghép tức thì từ 2 đến 10 bức ảnh",
-          })}
-          onClick={() => {
-            window.location.href = "/collage-maker";
-          }}
-        />
+        <QuickCollageEmptyCard />
       </div>
     );
   }
@@ -148,19 +133,7 @@ export function FillingTemplateListPanel({
       <div className="mb-4 flex items-center justify-between">
         <Subheading>{t("templateList.title")}</Subheading>
         <div className="flex items-center gap-2">
-          <Tooltip content={t("collageMaker:title")}>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                window.location.href = "/collage-maker";
-              }}
-            >
-              <LayoutGrid size={14} className="text-amber-500" />
-              {t("collageMaker:title")}
-            </Button>
-          </Tooltip>
+          <QuickCollageButton />
           <Button type="button" variant="primary" size="sm" onClick={onCreate}>
             <Plus size={14} />
             {t("templateList.newTemplate")}
@@ -368,93 +341,37 @@ function FillingTemplateCard({
         </div>
       </button>
 
-      <div className="absolute right-2 top-2 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
-          <ActionIconButton
-            title={t("templateList.editTemplateTooltip")}
-            icon={<Edit size={13} />}
-            onClick={() => onEditTemplate(template)}
-          />
-          <ActionIconButton
-            title={t("templateList.renameTemplateTooltip")}
-            icon={<Tag size={13} />}
-            onClick={() => onRenameTemplate(template)}
-          />
-          <ActionIconButton
-            title={
-              isExportingPsd
-                ? t("templateList.exportingPsdTooltip")
-                : t("templateList.exportPsdTooltip")
-            }
-            icon={<Download size={13} />}
-            onClick={() => void handleExportPsd()}
-            disabled={isExportingPsd}
-          />
-          <ActionIconButton
-            title={
-              template.isPinned
-                ? t("templateList.unpinTooltip")
-                : t("templateList.pinTooltip")
-            }
-            icon={template.isPinned ? <PinOff size={13} /> : <Pin size={13} />}
-            onClick={() => {
-              void templateStorage.togglePin(template.id).then(onRefresh);
-            }}
-          />
-          <ActionIconButton
-            title={t("templateList.deleteTooltip")}
-            icon={<Trash2 size={13} />}
-            destructive
-            onClick={async () => {
-              const confirmed = await confirmDialog({
-                title: t("templateList.deleteConfirm", { name: template.name }),
-                variant: "destructive",
-              });
-              if (confirmed) {
-                void templateStorage.remove(template.id).then(onRefresh);
-              }
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ActionIconButton({
-  icon,
-  title,
-  onClick,
-  destructive = false,
-  disabled = false,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  onClick: () => void;
-  destructive?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <Tooltip content={title}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (disabled) {
-            return;
-          }
-          onClick();
+      <PresetActionToolbar
+        isPinned={template.isPinned}
+        onEdit={() => onEditTemplate(template)}
+        editTooltip={t("templateList.editTemplateTooltip")}
+        onRename={() => onRenameTemplate(template)}
+        renameTooltip={t("templateList.renameTemplateTooltip")}
+        onExport={() => void handleExportPsd()}
+        exportTooltip={
+          isExportingPsd
+            ? t("templateList.exportingPsdTooltip")
+            : t("templateList.exportPsdTooltip")
+        }
+        isExporting={isExportingPsd}
+        onTogglePin={() => {
+          void templateStorage.togglePin(template.id).then(onRefresh);
         }}
-        className={`rounded p-1.5 transition-colors ${
-          destructive
-            ? "text-red-600 hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
-            : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-        } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
-      >
-        {icon}
-      </button>
-    </Tooltip>
+        pinTooltip={t("templateList.pinTooltip")}
+        unpinTooltip={t("templateList.unpinTooltip")}
+        onDelete={async () => {
+          const confirmed = await confirmDialog({
+            title: t("templateList.deleteConfirm", { name: template.name }),
+            variant: "destructive",
+          });
+          if (confirmed) {
+            void templateStorage.remove(template.id).then(onRefresh);
+          }
+        }}
+        deleteTooltip={t("templateList.deleteTooltip")}
+        alwaysVisible={template.isPinned}
+      />
+    </div>
   );
 }
 

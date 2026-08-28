@@ -10,7 +10,7 @@ import {
   ChevronRight,
   Sparkles,
 } from "lucide-react";
-import { Button, BodyText, MutedText } from "@imify/ui";
+import { AccordionCard, Button, BodyText, MutedText } from "@imify/ui";
 import { formatFileSize } from "@imify/core";
 import {
   BACKGROUND_REMOVAL_MODELS,
@@ -275,30 +275,39 @@ export function AssetAIModelsTab() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-slate-50/80 dark:bg-slate-950/40">
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="space-y-8">
-          <div className="bg-white dark:bg-indigo-500/10 p-5 rounded-xl flex gap-4 border border-slate-200 dark:border-indigo-500/20 shadow-sm">
-            <Cpu className="text-indigo-500 shrink-0" size={20} />
-            <div className="space-y-2 flex-1">
-              <div className="flex items-center justify-between">
-                <BodyText className="text-sm font-bold text-slate-800 dark:text-indigo-300">
-                  {t("assets.aboutAiTitle")}
-                </BodyText>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-700">
+        <div className="space-y-4 md:space-y-6">
+          {/* Header Info Accordion Card */}
+          <AccordionCard
+            icon={<Cpu size={16} />}
+            label={t("assets.aboutAiTitle")}
+            sublabel={
+              t("assets.aiDesc").length > 80
+                ? `${t("assets.aiDesc").slice(0, 80)}...`
+                : t("assets.aiDesc")
+            }
+            colorTheme="purple"
+            defaultOpen={
+              typeof window !== "undefined" ? window.innerWidth >= 640 : true
+            }
+          >
+            <div className="space-y-2">
+              <MutedText className="text-xs text-slate-600 dark:text-purple-300/80 leading-relaxed">
+                {t("assets.aiDesc")}
+              </MutedText>
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-900/40 border border-purple-100 dark:border-purple-700">
                   <div
                     className={`w-1.5 h-1.5 rounded-full ${typeof SharedArrayBuffer !== "undefined" ? "bg-green-500" : "bg-amber-500"}`}
                   />
-                  <span className="text-[9px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-tight">
+                  <span className="text-[9px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-tight">
                     {typeof SharedArrayBuffer !== "undefined"
                       ? t("assets.multiThreadActive")
                       : t("assets.asyncifyFallback")}
                   </span>
                 </div>
               </div>
-              <MutedText className="text-xs text-slate-600 dark:text-indigo-400/80 leading-relaxed">
-                {t("assets.aiDesc")}
-              </MutedText>
             </div>
-          </div>
+          </AccordionCard>
 
           {MODEL_CATEGORIES.map((category) => {
             const isCollapsed = collapsedCategories.has(category.id);

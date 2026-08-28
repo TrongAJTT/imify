@@ -41,8 +41,9 @@ export function ImportProgressDialog({
       isOpen={isOpen}
       onClose={() => {}}
       shouldBlockCloseAttempt={() => true}
-      className="max-w-md"
-      contentClassName="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150 select-none"
+      size="md"
+      showCloseButton={false}
+      contentClassName="w-full p-6 animate-in zoom-in-95 duration-150 select-none"
     >
       <div className="flex flex-col gap-4">
         {/* Header with icon */}

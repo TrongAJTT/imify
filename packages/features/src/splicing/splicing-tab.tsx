@@ -15,7 +15,6 @@ import type { ConversionProgressPayload } from "@imify/core/types";
 import { useTranslation } from "@imify/i18n";
 import { fetchRemoteImagesFromUrls } from "@imify/engine/converter/remote-image-import";
 import { useSplicingExport } from "./use-splicing-export";
-import { calculateProcessedSize } from "./layout-engine";
 
 import {
   toast,
@@ -53,7 +52,7 @@ import {
   resolveImageStyle,
 } from "@imify/stores/stores/splicing-store";
 import { useBatchStore } from "@imify/stores/stores/batch-store";
-import { useShortcutActions } from "../filling/use-shortcut-actions";
+import { useShortcutActions } from "../shared/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import { useClipboardImageIntake } from "../shared/use-clipboard-image-intake";
 import {
@@ -322,23 +321,13 @@ export function SplicingTab({
   useEffect(() => {
     setResizeQuickStats(
       buildResizeQuickStatsFromDimensions(
-        images.map((image) => {
-          const processed = calculateProcessedSize(
-            image.originalWidth,
-            image.originalHeight,
-            imageResize,
-            imageFitValue,
-            imageApplyTo
-          );
-          return {
-            width: processed.width,
-            height: processed.height,
-          };
-        }),
+        images.map((image) => ({
+          width: image.originalWidth,
+          height: image.originalHeight,
+        })),
       ),
     );
-  }, [images, imageResize, imageFitValue, imageApplyTo, setResizeQuickStats]);
-
+  }, [images, setResizeQuickStats]);
 
   const previewImagesTotalPixels = useMemo(
     () =>

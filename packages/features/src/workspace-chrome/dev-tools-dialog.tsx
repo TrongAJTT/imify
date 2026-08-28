@@ -43,7 +43,7 @@ import {
   normalizePerformancePreferences,
   type PerformancePreferences,
 } from "../processor/performance-preferences";
-import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
+import { useDialogMobileBreakpoint } from "./desktop-layout";
 import { useI18nStore } from "@imify/stores";
 import {
   getAvailableLanguages,
@@ -91,7 +91,7 @@ export function DevToolsDialog({
   const [isI18nImportDialogOpen, setIsI18nImportDialogOpen] = useState(false);
   const [isI18nTemplateDialogOpen, setIsI18nTemplateDialogOpen] =
     useState(false);
-  const [isMobileDialog, setIsMobileDialog] = useState(false);
+  const isMobileDialog = useDialogMobileBreakpoint();
 
   const showI18nDebugKeys = useDevModeStore((state) => state.showI18nDebugKeys);
   const setShowI18nDebugKeys = useDevModeStore(
@@ -206,17 +206,6 @@ export function DevToolsDialog({
   }, [isOpen, isMobileDialog]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia(
-      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`,
-    );
-    const update = () => setIsMobileDialog(mediaQuery.matches);
-    update();
-    mediaQuery.addEventListener("change", update);
-    return () => mediaQuery.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
     setRuntimeLogCaptureEnabled(devModeEnabled);
   }, [devModeEnabled]);
 
@@ -295,22 +284,14 @@ export function DevToolsDialog({
       <BaseDialog
         isOpen={isOpen}
         onClose={onClose}
+        size="6xl"
+        mobileFullscreen
         contentClassName={
           isMobileDialog
-            ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
-            : "relative flex h-[720px] w-full min-h-0 overflow-hidden rounded-xl"
+            ? "flex h-full w-full overflow-hidden flex-col"
+            : "flex h-[calc(100dvh-4rem)] w-full min-h-0 overflow-hidden"
         }
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-3 top-3 z-20 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          onClick={onClose}
-          aria-label="Close developer tools dialog"
-        >
-          <X size={18} />
-        </Button>
-
         <div
           className={`shrink-0 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${
             isMobileDialog
@@ -545,7 +526,11 @@ export function DevToolsDialog({
             layoutPreferences={layoutPreferences}
             settingsAdapter={devModeSettingsAdapter}
             onSuccess={() =>
-              toast.success("Import successful", "State has been restored.", 3000)
+              toast.success(
+                "Import successful",
+                "State has been restored.",
+                3000,
+              )
             }
           />
           <I18nRuntimeImportDialog

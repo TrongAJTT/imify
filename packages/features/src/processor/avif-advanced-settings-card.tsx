@@ -99,7 +99,7 @@ export function AvifAdvancedSettingsCard({
           checked={highAlphaQuality}
           onChange={onHighAlphaQualityChange}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
 
         <NumberInput
@@ -161,7 +161,7 @@ export function AvifAdvancedSettingsCard({
           checked={lossless}
           onChange={onLosslessChange}
           disabled={disabled}
-          theme="amber"
+          colorTheme="amber"
         />
       </div>
     </AccordionCard>

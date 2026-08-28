@@ -30,7 +30,6 @@ import {
   CheckboxCard,
   DiscreteSlider,
   type DiscreteSliderOption,
-  NumberInput,
   SelectInput,
   ToggleSwitch,
   SettingsItemHeader,
@@ -69,7 +68,7 @@ const DEFAULT_ACTIVE_CLASS =
 const DEFAULT_INACTIVE_CLASS =
   "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200";
 import type { WorkspaceSettingsDialogTab } from "@imify/stores/stores/workspace-settings-dialog-store";
-import { SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX } from "./desktop-layout";
+import { useDialogMobileBreakpoint } from "./desktop-layout";
 
 export type SettingsDialogTab = WorkspaceSettingsDialogTab;
 
@@ -170,7 +169,8 @@ export function WorkspaceSettingsDialog({
       );
     }
   };
-  const [isMobileDialog, setIsMobileDialog] = useState(false);
+
+  const isMobileDialog = useDialogMobileBreakpoint();
 
   const skipDownloadConfirm = useBatchStore(
     (state) => state.skipDownloadConfirm,
@@ -200,17 +200,6 @@ export function WorkspaceSettingsDialog({
       setActiveTab(null);
     }
   }, [initialTab, isOpen, isMobileDialog]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mediaQuery = window.matchMedia(
-      `(max-width: ${SETTINGS_DIALOG_MOBILE_MAX_WIDTH_PX}px)`,
-    );
-    const update = () => setIsMobileDialog(mediaQuery.matches);
-    update();
-    mediaQuery.addEventListener("change", update);
-    return () => mediaQuery.removeEventListener("change", update);
-  }, []);
 
   const { t } = useTranslation(["settings", "common"]);
 
@@ -386,21 +375,14 @@ export function WorkspaceSettingsDialog({
       <BaseDialog
         isOpen={isOpen}
         onClose={onClose}
+        size="4xl"
+        mobileFullscreen
         contentClassName={
           isMobileDialog
-            ? "relative flex h-[calc(100dvh-2rem)] w-full overflow-hidden rounded-xl flex-col"
-            : "relative flex h-[720px] w-full min-h-0 overflow-hidden rounded-xl"
+            ? "flex h-full w-full overflow-hidden flex-col"
+            : "flex h-[80vh] w-full min-h-0 overflow-hidden"
         }
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-3 top-3 z-20 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          onClick={onClose}
-          aria-label="Close settings dialog"
-        >
-          <X size={18} />
-        </Button>
         <div
           className={`shrink-0 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 ${
             isMobileDialog

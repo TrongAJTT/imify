@@ -13,7 +13,7 @@ import {
   type SplitterStoreState,
   type SplitterUiState
 } from "@imify/features/splitter/types"
-import type { SavedSetupPreset } from "./batch-store"
+import type { SavedPreset } from "@imify/core"
 
 function clampInt(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isFinite(value)) {
@@ -233,7 +233,7 @@ export const useSplitterStore = create<SplitterStoreState>()(
           exportSettings: normalizeExportSettings(config.exportSettings)
         }),
 
-      applyPreset: (preset: SavedSetupPreset) => {
+      applyPreset: (preset: SavedPreset<SplitterPresetConfig>) => {
         set((state) => ({
           activePresetId: preset.id,
         }))

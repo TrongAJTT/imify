@@ -6,11 +6,14 @@ import {
   type PatternAssetBorderSettings,
   type PatternAssetMonochromeSettings,
 } from "./types";
-import { Button } from "@imify/ui";
-import { CheckboxCard } from "@imify/ui";
-import { ColorPickerPopover } from "@imify/ui";
-import { ControlledPopover } from "@imify/ui";
-import { NumberInput } from "@imify/ui";
+import {
+  Button,
+  CheckboxCard,
+  ColorPickerPopover,
+  ControlledPopover,
+  NumberInput,
+  Z_INDEX,
+} from "@imify/ui";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -65,7 +68,7 @@ export function PatternAssetListItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 40 : undefined,
+    zIndex: isDragging ? Z_INDEX.drag : undefined,
     opacity: isDragging ? 0.85 : 1,
   };
   const monochrome =

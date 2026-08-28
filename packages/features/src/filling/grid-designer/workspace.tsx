@@ -9,7 +9,15 @@ import React, {
 } from "react";
 import { Stage } from "react-konva";
 import type Konva from "konva";
-import { ArrowLeft, ChevronDown, Image, Pencil } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  ChevronDown,
+  Columns3,
+  Image,
+  Pencil,
+  Rows3,
+} from "lucide-react";
 import {
   Button,
   PreviewInteractionModeToggle,
@@ -26,14 +34,25 @@ import {
   parseGridDesign,
   generateGridLayers,
   generateGridTemplate,
+  canReorderGridRows,
+  computeGridRowBounds,
+  computeGridRowGroups,
+  hasReversibleGridDefinition,
+  reorderGridDefinitions,
+  reverseAllGridDefinitions,
+  reverseSingleGridDefinition,
+  toggleGridDirection,
 } from "./generator";
 import { GridDesignCanvasLayer } from "./canvas-layer";
+import { GridRowReorderOverlay } from "./grid-row-reorder-overlay";
 
 import { templateStorage } from "../template-storage";
 import type { FillingTemplate } from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
+import { getInitialCanvasHeightPx } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
 import { useCanvasViewport } from "../../shared/use-canvas-viewport";
+import { useCanvasResizer } from "../../shared/use-canvas-resizer";
 import {
   CANVAS_PADDING,
   PREVIEW_MAX_ZOOM,
@@ -53,6 +72,9 @@ interface GridDesignWorkspaceProps {
   ) => void | Promise<void>;
   customActions?: React.ReactNode;
   autoSave?: boolean;
+  allowReverseRow?: boolean;
+  allowReverseAll?: boolean;
+  allowDetachSubRows?: boolean;
 }
 
 export function GridDesignWorkspace({
@@ -61,13 +83,27 @@ export function GridDesignWorkspace({
   onSaved,
   customActions,
   autoSave = false,
+  allowReverseRow = true,
+  allowReverseAll = true,
+  allowDetachSubRows = true,
 }: GridDesignWorkspaceProps) {
   const { t } = useTranslation("filling");
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+  const [previewContainerHeight, setPreviewContainerHeight] = useState(() =>
+    getInitialCanvasHeightPx(680),
+  );
   const [previewZoom, setPreviewZoom] = useState(100);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
+  const {
+    isResizing: isResizingPreview,
+    handleResizeStart: handlePreviewResizeStart,
+  } = useCanvasResizer({
+    containerRef,
+    onHeightChange: setPreviewContainerHeight,
+    minHeight: 320,
+  });
   const [previewInteractionMode, setPreviewInteractionMode] =
     useState<PreviewInteractionMode>("zoom");
 
@@ -97,6 +133,9 @@ export function GridDesignWorkspace({
   const setGridLayerCount = useFillingStore((state) => state.setGridLayerCount);
   const highlightedGridIndex = useFillUiStore(
     (state) => state.highlightedGridIndex,
+  );
+  const setHighlightedGridIndex = useFillUiStore(
+    (state) => state.setHighlightedGridIndex,
   );
   const updateTemplate = useFillingStore((state) => state.updateTemplate);
   const { getShortcutLabel } = useShortcutPreferences();
@@ -160,6 +199,63 @@ export function GridDesignWorkspace({
   useEffect(() => {
     setGridLayerCount(parseResult.layoutCells.length);
   }, [parseResult.layoutCells.length, setGridLayerCount]);
+
+  const reorderCheck = useMemo(
+    () => canReorderGridRows(parseResult, activeParams),
+    [parseResult, activeParams],
+  );
+
+  const rowBoundsList = useMemo(
+    () =>
+      computeGridRowBounds(
+        activeParams,
+        template.canvasWidth,
+        template.canvasHeight,
+      ),
+    [activeParams, template.canvasWidth, template.canvasHeight],
+  );
+
+  const rowGroups = useMemo(
+    () =>
+      computeGridRowGroups(
+        parseResult,
+        activeParams,
+        template.canvasWidth,
+        template.canvasHeight,
+      ),
+    [parseResult, activeParams, template.canvasWidth, template.canvasHeight],
+  );
+
+  const handleReorderRows = useCallback(
+    (fromStart: number, fromEnd: number, toIndex: number) => {
+      setGridDesignParams(
+        reorderGridDefinitions(activeParams, fromStart, fromEnd, toIndex),
+      );
+    },
+    [activeParams, setGridDesignParams],
+  );
+
+  const isColsMode = activeParams.direction === "cols";
+
+  const handleToggleDirection = useCallback(() => {
+    setGridDesignParams(toggleGridDirection(activeParams));
+  }, [activeParams, setGridDesignParams]);
+
+  const handleReverseSingleRow = useCallback(
+    (rowIndex: number) => {
+      setGridDesignParams(reverseSingleGridDefinition(activeParams, rowIndex));
+    },
+    [activeParams, setGridDesignParams],
+  );
+
+  const handleReverseAll = useCallback(() => {
+    setGridDesignParams(reverseAllGridDefinitions(activeParams));
+  }, [activeParams, setGridDesignParams]);
+
+  const hasReversibleDefinition = useMemo(
+    () => hasReversibleGridDefinition(activeParams),
+    [activeParams],
+  );
 
   const fitScale = useMemo(() => {
     const availW = stageSize.width - CANVAS_PADDING * 2;
@@ -242,6 +338,42 @@ export function GridDesignWorkspace({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleDirection}
+            title={
+              isColsMode
+                ? t("gridDesigner.switchToRows")
+                : t("gridDesigner.switchToCols")
+            }
+            className="h-8 gap-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700"
+          >
+            {isColsMode ? <Columns3 size={14} /> : <Rows3 size={14} />}
+            <span>
+              {isColsMode
+                ? t("gridDesigner.directionCols")
+                : t("gridDesigner.directionRows")}
+            </span>
+          </Button>
+
+          {allowReverseAll && hasReversibleDefinition && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReverseAll}
+              title={
+                isColsMode
+                  ? t("gridDesigner.reverseAllCols")
+                  : t("gridDesigner.reverseAllRows")
+              }
+              className="h-8 gap-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              <ArrowLeftRight size={14} />
+              <span>{t("gridDesigner.reverseAll")}</span>
+            </Button>
+          )}
+
           <PreviewInteractionModeToggle
             mode={previewInteractionMode}
             onChange={setPreviewInteractionMode}
@@ -308,7 +440,7 @@ export function GridDesignWorkspace({
       <div
         ref={containerRef}
         className="relative w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800/50 select-none touch-none"
-        style={{ minHeight: 400 }}
+        style={{ height: `${previewContainerHeight}px` }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -326,6 +458,23 @@ export function GridDesignWorkspace({
             highlightedIndex={highlightedGridIndex}
           />
         </Stage>
+        <GridRowReorderOverlay
+          boundsList={rowBoundsList}
+          groups={rowGroups}
+          direction={activeParams.direction ?? "rows"}
+          renderScale={renderScale}
+          offsetX={offsetX}
+          offsetY={offsetY}
+          canvasWidth={template.canvasWidth}
+          canvasHeight={template.canvasHeight}
+          enabled={reorderCheck.allowed && !isViewportPanning}
+          allowReverseRow={allowReverseRow}
+          allowDetachSubRows={allowDetachSubRows}
+          rowDefinitions={activeParams.rowDefinitions}
+          onReorder={handleReorderRows}
+          onReverseRow={handleReverseSingleRow}
+          onHoverRowChange={setHighlightedGridIndex}
+        />
         <ZoomPanControl
           zoom={previewZoom}
           panX={previewPan.x}
@@ -335,6 +484,21 @@ export function GridDesignWorkspace({
           minZoom={PREVIEW_MIN_ZOOM}
           maxZoom={PREVIEW_MAX_ZOOM}
         />
+        <div
+          onPointerDown={handlePreviewResizeStart}
+          className={`absolute bottom-0 left-0 right-0 h-1 bg-slate-300 dark:bg-slate-600 hover:bg-sky-400 dark:hover:bg-sky-500 transition-colors z-20 ${
+            isResizingPreview ? "bg-sky-400 dark:bg-sky-500" : ""
+          }`}
+          style={{ cursor: "ns-resize", touchAction: "none" }}
+          role="separator"
+          aria-label="Resize grid designer preview height"
+        >
+          <div
+            className={`absolute inset-x-0 bottom-0 h-1 transition-colors ${
+              isResizingPreview ? "bg-sky-500" : ""
+            }`}
+          />
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ type SidebarCardProps = {
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
+  colorTheme?: ColorTheme;
+  /** Legacy alias for colorTheme */
   theme?: ColorTheme;
   tooltipLabel?: string;
   tooltipContent?: string;
@@ -25,11 +27,13 @@ export function SidebarCard({
   onClick,
   disabled,
   className,
+  colorTheme,
   theme = "sky",
   tooltipLabel,
   tooltipContent,
 }: SidebarCardProps) {
-  const themeClasses = getThemeClasses(theme);
+  const activeColorTheme = colorTheme ?? theme;
+  const themeClasses = getThemeClasses(activeColorTheme);
 
   return (
     <div className="relative group">

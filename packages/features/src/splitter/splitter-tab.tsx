@@ -15,11 +15,7 @@ import {
   reserveUniqueFileName,
 } from "@imify/core/file-name-pattern";
 import type { ConversionProgressPayload } from "@imify/core/types";
-import {
-  toast,
-  confirmBatchDownload,
-  promptRenameInput,
-} from "@imify/stores";
+import { toast, confirmBatchDownload, promptRenameInput } from "@imify/stores";
 import { downloadWithFilename, sleep } from "../processor/batch/utils";
 import {
   ExportSplitButton,
@@ -37,7 +33,7 @@ import {
   MutedText,
   Subheading,
 } from "@imify/ui";
-import { useShortcutActions } from "../filling/use-shortcut-actions";
+import { useShortcutActions } from "../shared/use-shortcut-actions";
 import { useShortcutPreferences } from "@imify/stores/use-shortcut-preferences";
 import {
   splitImageIntoRawSegments,

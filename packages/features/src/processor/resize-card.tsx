@@ -23,7 +23,7 @@ import {
 } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 
-export type ResizeCardProps = {
+export type ResizeCardContentProps = {
   resizeMode: string;
   resizeValue?: number;
   resizeApplyTo?: ResizeApplyTo;
@@ -54,6 +54,9 @@ export type ResizeCardProps = {
   onDpiChange?: (dpi: number) => void;
   disabled?: boolean;
   availableModes?: string[];
+};
+
+export type ResizeCardProps = ResizeCardContentProps & {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   alwaysOpen?: boolean;
@@ -78,26 +81,22 @@ function generateSublabel(
       case "fit_value":
         return `Fit ${resizeApplyTo} • ${resizeValue}px`;
       case "zoom_min":
-        return `Zoom min ${resizeApplyTo} • ${resizeValue}px`;
+        return `Zoom Min • ${resizeValue}px`;
       case "zoom_max":
-        return `Zoom max ${resizeApplyTo} • ${resizeValue}px`;
+        return `Zoom Max • ${resizeValue}px`;
       case "set_size":
-        return `Set size • ${resizeWidth}×${resizeHeight}`;
+        return `${resizeWidth} × ${resizeHeight}px`;
       case "scale":
         return `Scale • ${resizeValue}%`;
       case "paper_size":
       case "page_size":
-        return `${paperSize} @ ${dpi}dpi`;
+        return `${paperSize.toUpperCase()} • ${dpi} DPI`;
       default:
-        return "No resize";
+        return "Custom";
     }
   })();
 
-  if (
-    mode === "none" ||
-    mode === "inherit" ||
-    resamplingAlgorithm === DEFAULT_RESAMPLING_ALGORITHM
-  ) {
+  if (mode === "none" || mode === "inherit") {
     return baseLabel;
   }
 
@@ -108,7 +107,7 @@ function generateSublabel(
   return `${baseLabel} • ${algorithmLabel}`;
 }
 
-export function ResizeCard({
+export function ResizeCardContent({
   resizeMode = "inherit",
   resizeValue = 1280,
   resizeApplyTo = "width",
@@ -139,11 +138,7 @@ export function ResizeCard({
   onDpiChange,
   disabled,
   availableModes,
-  isOpen,
-  onOpenChange,
-  alwaysOpen,
-  groupId,
-}: ResizeCardProps) {
+}: ResizeCardContentProps) {
   const { t } = useTranslation(["processor", "common"]);
   const quickStatsPopoverBehavior = usePopoverTriggerBehavior();
 
@@ -173,16 +168,6 @@ export function ResizeCard({
 
   const safeResamplingAlgorithm =
     normalizeResizeResamplingAlgorithm(resamplingAlgorithm);
-  const sublabel = generateSublabel(
-    resizeMode,
-    resizeValue,
-    resizeApplyTo,
-    resizeWidth,
-    resizeHeight,
-    paperSize,
-    dpi,
-    safeResamplingAlgorithm,
-  );
 
   const showResamplingAlgorithm =
     Boolean(onResamplingAlgorithmChange) &&
@@ -196,22 +181,38 @@ export function ResizeCard({
 
   const showQuickResizePopover = isLinearMode;
 
-  const isWidthTarget =
-    resizeApplyTo === "width" ||
-    resizeApplyTo === "shortest" ||
-    resizeApplyTo === "longest";
-  const isHeightTarget = resizeApplyTo === "height";
-  const sourceEdge = isWidthTarget
-    ? resizeSourceWidth
-    : isHeightTarget
-      ? resizeSourceHeight
-      : 0;
+  const quickStatsFromQueue = (() => {
+    switch (resizeApplyTo) {
+      case "width":
+        return resizeQuickStats?.width ?? null;
+      case "height":
+        return resizeQuickStats?.height ?? null;
+      case "shortest":
+        return resizeQuickStats?.shortest ?? null;
+      case "longest":
+        return resizeQuickStats?.longest ?? null;
+      default:
+        return resizeQuickStats?.width ?? null;
+    }
+  })();
+
+  const sourceEdge = (() => {
+    const sw = resizeSourceWidth ?? 0;
+    const sh = resizeSourceHeight ?? 0;
+    switch (resizeApplyTo) {
+      case "width":
+        return sw;
+      case "height":
+        return sh;
+      case "shortest":
+        return sw > 0 && sh > 0 ? Math.min(sw, sh) : sw || sh;
+      case "longest":
+        return sw > 0 && sh > 0 ? Math.max(sw, sh) : sw || sh;
+      default:
+        return sw;
+    }
+  })();
   const hasSourceEdge = sourceEdge > 0;
-  const quickStatsFromQueue = isWidthTarget
-    ? resizeQuickStats?.width
-    : isHeightTarget
-      ? resizeQuickStats?.height
-      : null;
 
   const quickResizeValues = quickStatsFromQueue
     ? [
@@ -262,6 +263,174 @@ export function ResizeCard({
         })();
 
   return (
+    <div className="space-y-3">
+      <SelectInput
+        label={t("resizeType")}
+        value={resizeMode}
+        disabled={disabled}
+        options={modeOptions}
+        onChange={(val) => onResizeModeChange?.(val)}
+        tooltipContent={
+          <TooltipTableContent
+            rows={
+              t("tooltipResizeTypes", { returnObjects: true }) as Array<{
+                method: string;
+                description: string;
+              }>
+            }
+            firstColumnHeader={t("common:option")}
+            secondColumnHeader={t("common:whatItDoes")}
+          />
+        }
+      />
+
+      {isLinearMode && (
+        <SelectInput
+          label={t("resizeApplyTo")}
+          value={resizeApplyTo}
+          disabled={disabled}
+          options={applyToOptions}
+          onChange={(val) => onResizeApplyToChange?.(val as ResizeApplyTo)}
+        />
+      )}
+
+      {(isLinearMode || resizeMode === "scale") && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <LabelText className="text-xs">
+              {resizeMode === "scale" ? t("scalePercent") : t("valuePx")}
+            </LabelText>
+
+            {showQuickResizePopover && onResizeValueChange ? (
+              <ControlledPopover
+                trigger={
+                  <button
+                    type="button"
+                    aria-label="Open quick resize options"
+                    disabled={disabled}
+                    className="h-6 rounded-md border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1 justify-center disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <PencilRuler size={11} />
+                    {t("quickStats")}
+                  </button>
+                }
+                preset="inspector"
+                behavior={quickStatsPopoverBehavior}
+                side="bottom"
+                align="end"
+                closeOnContentClick
+                contentClassName="z-[9999] w-56 rounded-md border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+              >
+                <div className="mt-1 grid grid-cols-3 gap-1.5">
+                  {quickResizeValues.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => onResizeValueChange(preset.value)}
+                      className="inline-flex flex-col items-center justify-center rounded-md border border-slate-200 px-2 py-1.5 text-[11px] transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    >
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">
+                        {preset.label}
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {preset.value}px
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </ControlledPopover>
+            ) : null}
+          </div>
+
+          <NumberInput
+            disabled={disabled}
+            min={1}
+            value={resizeValue}
+            onChangeValue={(val) => onResizeValueChange?.(val)}
+          />
+        </div>
+      )}
+
+      {resizeMode === "set_size" && (
+        <SmartResizeModule
+          containBackground={resizeContainBackground}
+          disabled={disabled}
+          fitMode={resizeFitMode as "fill" | "cover" | "contain"}
+          height={resizeHeight}
+          aspectMode={resizeAspectMode as "fixed" | "original" | "free"}
+          aspectRatio={
+            typeof resizeAspectRatio === "string"
+              ? resizeAspectRatio
+              : String(resizeAspectRatio)
+          }
+          onAspectModeChange={(mode) => onResizeAspectModeChange?.(mode)}
+          onAspectRatioChange={(ratio) => onResizeAspectRatioChange?.(ratio)}
+          onContainBackgroundChange={(color) =>
+            onResizeContainBackgroundChange?.(color)
+          }
+          onFitModeChange={(mode) => onResizeFitModeChange?.(mode)}
+          onHeightChange={(height) => onResizeHeightChange?.(height)}
+          onSizeAnchorChange={() => {}}
+          onWidthChange={(width) => onResizeWidthChange?.(width)}
+          originalHeight={resizeSourceHeight}
+          originalWidth={resizeSourceWidth}
+          lockSignal={resizeSyncVersion}
+          width={resizeWidth}
+        />
+      )}
+
+      {(resizeMode === "paper_size" || (resizeMode as any) === "page_size") && (
+        <PaperConfig
+          disabled={disabled}
+          dpi={dpi as any}
+          onDpiChange={(d) => onDpiChange?.(d)}
+          onPaperSizeChange={(size) => onPaperSizeChange?.(size)}
+          paperSize={paperSize as any}
+        />
+      )}
+
+      {showResamplingAlgorithm && (
+        <SelectInput
+          label={t("resamplingAlgorithm")}
+          value={safeResamplingAlgorithm}
+          disabled={disabled}
+          options={RESAMPLING_ALGORITHM_OPTIONS}
+          onChange={(nextValue) =>
+            onResamplingAlgorithmChange?.(
+              normalizeResizeResamplingAlgorithm(nextValue),
+            )
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+export function ResizeCard({
+  isOpen,
+  onOpenChange,
+  alwaysOpen,
+  groupId,
+  disabled,
+  ...contentProps
+}: ResizeCardProps) {
+  const { t } = useTranslation(["processor", "common"]);
+  const safeResamplingAlgorithm = normalizeResizeResamplingAlgorithm(
+    contentProps.resamplingAlgorithm,
+  );
+  const sublabel = generateSublabel(
+    contentProps.resizeMode ?? "inherit",
+    contentProps.resizeValue ?? 1280,
+    contentProps.resizeApplyTo ?? "width",
+    contentProps.resizeWidth ?? 1280,
+    contentProps.resizeHeight ?? 960,
+    contentProps.paperSize ?? "A4",
+    contentProps.dpi ?? 300,
+    safeResamplingAlgorithm,
+  );
+
+  return (
     <AccordionCard
       icon={<Maximize2 size={14} />}
       label={t("resize")}
@@ -273,148 +442,7 @@ export function ResizeCard({
       groupId={groupId}
       colorTheme="purple"
     >
-      <div className="space-y-3">
-        <SelectInput
-          label={t("resizeType")}
-          value={resizeMode}
-          disabled={disabled}
-          options={modeOptions}
-          onChange={(val) => onResizeModeChange?.(val)}
-          tooltipContent={
-            <TooltipTableContent
-              rows={
-                t("tooltipResizeTypes", { returnObjects: true }) as Array<{
-                  method: string;
-                  description: string;
-                }>
-              }
-              firstColumnHeader={t("common:option")}
-              secondColumnHeader={t("common:whatItDoes")}
-            />
-          }
-        />
-
-        {isLinearMode && (
-          <SelectInput
-            label={t("resizeApplyTo")}
-            value={resizeApplyTo}
-            disabled={disabled}
-            options={applyToOptions}
-            onChange={(val) => onResizeApplyToChange?.(val as ResizeApplyTo)}
-          />
-        )}
-
-        {(isLinearMode || resizeMode === "scale") && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between gap-2">
-              <LabelText className="text-xs">
-                {resizeMode === "scale" ? t("scalePercent") : t("valuePx")}
-              </LabelText>
-
-              {showQuickResizePopover && onResizeValueChange ? (
-                <ControlledPopover
-                  trigger={
-                    <button
-                      type="button"
-                      aria-label="Open quick resize options"
-                      disabled={disabled}
-                      className="h-6 rounded-md border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-medium text-slate-600 hover:text-sky-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1 justify-center disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <PencilRuler size={11} />
-                      {t("quickStats")}
-                    </button>
-                  }
-                  preset="inspector"
-                  behavior={quickStatsPopoverBehavior}
-                  side="bottom"
-                  align="end"
-                  closeOnContentClick
-                  contentClassName="z-[9999] w-56 rounded-md border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
-                >
-                  <div className="mt-1 grid grid-cols-3 gap-1.5">
-                    {quickResizeValues.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => onResizeValueChange(preset.value)}
-                        className="inline-flex flex-col items-center justify-center rounded-md border border-slate-200 px-2 py-1.5 text-[11px] transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800"
-                      >
-                        <span className="font-semibold text-slate-700 dark:text-slate-200">
-                          {preset.label}
-                        </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                          {preset.value}px
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </ControlledPopover>
-              ) : null}
-            </div>
-
-            <NumberInput
-              disabled={disabled}
-              min={1}
-              value={resizeValue}
-              onChangeValue={(val) => onResizeValueChange?.(val)}
-            />
-          </div>
-        )}
-
-        {resizeMode === "set_size" && (
-          <SmartResizeModule
-            containBackground={resizeContainBackground}
-            disabled={disabled}
-            fitMode={resizeFitMode as "fill" | "cover" | "contain"}
-            height={resizeHeight}
-            aspectMode={resizeAspectMode as "fixed" | "original" | "free"}
-            aspectRatio={
-              typeof resizeAspectRatio === "string"
-                ? resizeAspectRatio
-                : String(resizeAspectRatio)
-            }
-            onAspectModeChange={(mode) => onResizeAspectModeChange?.(mode)}
-            onAspectRatioChange={(ratio) => onResizeAspectRatioChange?.(ratio)}
-            onContainBackgroundChange={(color) =>
-              onResizeContainBackgroundChange?.(color)
-            }
-            onFitModeChange={(mode) => onResizeFitModeChange?.(mode)}
-            onHeightChange={(height) => onResizeHeightChange?.(height)}
-            onSizeAnchorChange={() => {}}
-            onWidthChange={(width) => onResizeWidthChange?.(width)}
-            originalHeight={resizeSourceHeight}
-            originalWidth={resizeSourceWidth}
-            lockSignal={resizeSyncVersion}
-            width={resizeWidth}
-          />
-        )}
-
-        {(resizeMode === "paper_size" ||
-          (resizeMode as any) === "page_size") && (
-          <PaperConfig
-            disabled={disabled}
-            dpi={dpi as any}
-            onDpiChange={(d) => onDpiChange?.(d)}
-            onPaperSizeChange={(size) => onPaperSizeChange?.(size)}
-            paperSize={paperSize as any}
-          />
-        )}
-
-        {showResamplingAlgorithm && (
-          <SelectInput
-            label={t("resamplingAlgorithm")}
-            value={safeResamplingAlgorithm}
-            disabled={disabled}
-            options={RESAMPLING_ALGORITHM_OPTIONS}
-            onChange={(nextValue) =>
-              onResamplingAlgorithmChange?.(
-                normalizeResizeResamplingAlgorithm(nextValue),
-              )
-            }
-          />
-        )}
-      </div>
+      <ResizeCardContent {...contentProps} disabled={disabled} />
     </AccordionCard>
   );
 }

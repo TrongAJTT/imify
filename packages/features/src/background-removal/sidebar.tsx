@@ -155,7 +155,7 @@ export function BackgroundRemoverSidebar({
           fileNamePattern={fileNamePattern}
           onFileNamePatternChange={setFileNamePattern}
           namingConfig={BACKGROUND_REMOVAL_NAMING_CONFIG}
-          theme="pink"
+          colorTheme="pink"
         />
       ),
     },

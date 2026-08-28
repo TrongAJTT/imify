@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Check, Edit2, Plus, Trash2, Pin } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
 
 import { SavePresetDialog } from "../processor/save-preset-dialog";
@@ -11,6 +11,7 @@ import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-sto
 import { confirmDialog } from "@imify/stores";
 import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
+import { PresetActionToolbar } from "../shared/preset-action-toolbar";
 
 interface SplitterPresetSelectViewProps {
   presets: SavedSplitterPreset[];
@@ -64,18 +65,20 @@ function SplitterPresetCard({
         style={{ boxShadow: `inset 0 0 0 1.5px ${preset.highlightColor}` }}
       />
 
+      <PresetActionToolbar
+        isPinned={preset.pinned || preset.isPinned}
+        onTogglePin={onTogglePin}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        alwaysVisible={isActive || preset.pinned || preset.isPinned}
+      />
+
       <div className="relative z-10 flex min-h-[84px] w-full overflow-hidden">
         <div className="flex flex-1 flex-col p-3">
-          <div className="mb-2 flex min-w-0 items-start gap-2">
+          <div className="mb-2 flex min-w-0 items-start gap-2 pr-16">
             <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
               {preset.name}
             </span>
-            {preset.pinned && (
-              <Pin
-                size={12}
-                className="mt-0.5 fill-amber-500 text-amber-500 rotate-45 shrink-0"
-              />
-            )}
           </div>
 
           <div className="flex items-center justify-between gap-2 text-[11px]">
@@ -91,57 +94,6 @@ function SplitterPresetCard({
               </span>
             ) : null}
           </div>
-        </div>
-      </div>
-
-      <div
-        className="absolute right-2 top-2 z-10 translate-y-1 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100"
-        style={{ opacity: isActive || preset.pinned ? 1 : undefined }}
-      >
-        <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-1 py-1 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onTogglePin();
-            }}
-            className={`rounded p-1 transition-colors ${
-              preset.pinned
-                ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/20"
-                : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-            }`}
-            aria-label={preset.pinned ? "Unpin preset" : "Pin preset"}
-          >
-            <Pin
-              size={12}
-              className={preset.pinned ? "fill-amber-500 rotate-45" : ""}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onEdit();
-            }}
-            className="rounded p-1 text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
-            aria-label="Edit preset"
-          >
-            <Edit2 size={12} />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onDelete();
-            }}
-            className="rounded p-1 text-red-600 transition-colors hover:bg-red-50/90 dark:text-red-400 dark:hover:bg-red-500/20"
-            aria-label="Delete preset"
-          >
-            <Trash2 size={12} />
-          </button>
         </div>
       </div>
 

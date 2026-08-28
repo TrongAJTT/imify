@@ -1,30 +1,57 @@
-"use client";
-
-import React, { useCallback, useMemo } from "react";
-import { Columns3, Copy, LayoutGrid, Rows3 } from "lucide-react";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  ArrowLeftRight,
+  BookmarkPlus,
+  Columns3,
+  Copy,
+  LayoutGrid,
+  Rows3,
+} from "lucide-react";
 import { AccordionCard } from "@imify/ui/ui/accordion-card";
+import { BaseDialog } from "@imify/ui/ui/base-dialog";
 import { CheckboxCard } from "@imify/ui/ui/checkbox-card";
-import { ControlledPopover } from "@imify/ui/ui/controlled-popover";
 import { NumberInput } from "@imify/ui/ui/number-input";
 import { RadioCard } from "@imify/ui/ui/radio-card";
+import { SidebarCard } from "@imify/ui/ui/sidebar-card";
 import { TextInput } from "@imify/ui/ui/text-input";
+import { toast } from "@imify/stores";
 import { useFillingStore } from "@imify/stores/stores/filling-store";
 import { useFillUiStore } from "@imify/stores/stores/fill-ui-store";
+import { useCollagePresetStore } from "@imify/stores/stores/collage-preset-store";
+import { PRESET_HIGHLIGHT_COLORS } from "@imify/stores/stores/preset-colors";
 import type {
   FillingTemplate,
   GridDesignParams,
   GridPrimaryDirection,
 } from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
-import { GRID_TEMPLATE_PRESETS, type GridTemplatePreset } from "../config";
 import { useTranslation } from "@imify/i18n";
-import { parseGridDesign } from "./generator";
-import { parseGridTemplateString } from "./grid-template-utils";
+import {
+  canReverseDefinition,
+  hasReversibleGridDefinition,
+  parseGridDesign,
+  reverseAllGridDefinitions,
+  reverseSingleGridDefinition,
+} from "./generator";
+import { CollagePresetGrid } from "../../collage-maker/collage-preset-grid";
+import {
+  MAX_COLLAGE_IMAGES,
+  MIN_COLLAGE_IMAGES,
+} from "../../collage-maker/config";
+import { SavePresetDialog } from "../../processor/save-preset-dialog";
 import { GRID_DESIGN_TOOLTIPS } from "./tooltips";
-import { usePopoverTriggerBehavior } from "../../shared/use-popover-trigger-behavior";
 
 interface GridDesignSidebarProps {
   template: FillingTemplate;
+}
+
+function getDefaultCollageName(): string {
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, "0");
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  return `Collage #${d}/${m} ${hh}:${mm}`.slice(0, 20);
 }
 
 const PRESET_OUTER_PADDING = 16;
@@ -61,56 +88,13 @@ function normalizeGridDesignParams(params: GridDesignParams): GridDesignParams {
   };
 }
 
-function GridTemplatePreview({ preset }: { preset: GridTemplatePreset }) {
-  const { direction, definitions } = parseGridTemplateString(
-    preset.templateString,
-  );
-  const previewParams: GridDesignParams = {
-    ...DEFAULT_GRID_DESIGN_PARAMS,
-    direction,
-    rowCount: definitions.length,
-    outerPadding: PRESET_OUTER_PADDING,
-    gap: PRESET_GAP,
-    gapX: PRESET_GAP,
-    gapY: PRESET_GAP,
-    uniformColumns: false,
-    uniformColumnsDef: "",
-    rowDefinitions: [...definitions],
-  };
-  const preview = parseGridDesign(
-    previewParams,
-    PREVIEW_CANVAS_SIZE,
-    PREVIEW_CANVAS_SIZE,
-  );
-
-  return (
-    <div className="relative h-full w-full overflow-hidden rounded-md border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
-      {preview.layoutCells.map((cell) => {
-        const clipPath =
-          cell.points && cell.points.length > 4
-            ? `polygon(${cell.points.map((p) => `${((p.x / cell.width) * 100).toFixed(1)}% ${((p.y / cell.height) * 100).toFixed(1)}%`).join(", ")})`
-            : undefined
-
-        return (
-          <div
-            key={`${preset.id}-${cell.id}`}
-            className="absolute rounded-[3px] border border-sky-300 bg-sky-200/65 dark:border-sky-500/70 dark:bg-sky-500/35"
-            style={{
-              left: `${(cell.x / PREVIEW_CANVAS_SIZE) * 100}%`,
-              top: `${(cell.y / PREVIEW_CANVAS_SIZE) * 100}%`,
-              width: `${(cell.width / PREVIEW_CANVAS_SIZE) * 100}%`,
-              height: `${(cell.height / PREVIEW_CANVAS_SIZE) * 100}%`,
-              clipPath,
-            }}
-          />
-        )
-      })}
-    </div>
-  );
-}
-
 export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
-  const { t } = useTranslation("filling");
+  const { t } = useTranslation([
+    "filling",
+    "common",
+    "workspace",
+    "collageMaker",
+  ]);
   const storeParams = useFillingStore((state) => state.gridDesignParams);
   const layerCount = useFillingStore((state) => state.gridLayerCount);
   const setGridDesignParams = useFillingStore(
@@ -119,7 +103,13 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
   const setHighlightedGridIndex = useFillUiStore(
     (state) => state.setHighlightedGridIndex,
   );
-  const popoverBehavior = usePopoverTriggerBehavior();
+
+  const saveCollagePreset = useCollagePresetStore(
+    (state) => state.saveCurrentPreset,
+  );
+
+  const [isUsePresetDialogOpen, setIsUsePresetDialogOpen] = useState(false);
+  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
 
   const params = useMemo(
     () =>
@@ -166,32 +156,14 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
     [params.rowDefinitions, update],
   );
 
-  const applyTemplatePreset = useCallback(
-    (preset: GridTemplatePreset) => {
-      const { direction, definitions } = parseGridTemplateString(
-        preset.templateString,
-      );
-      update({
-        direction,
-        rowCount: definitions.length,
-        uniformColumns: false,
-        uniformColumnsDef: "",
-        rowDefinitions: definitions,
-      });
-    },
-    [update],
-  );
-
   const sublabel = isColsMode
     ? t("gridDesigner.sublabelCols", {
         count: params.rowCount,
         cells: layerCount,
-        defaultValue: `${params.rowCount} columns, ${layerCount} cells`,
       })
     : t("gridDesigner.sublabelRows", {
         count: params.rowCount,
         cells: layerCount,
-        defaultValue: `${params.rowCount} rows, ${layerCount} cells`,
       });
 
   const validation = useMemo(() => {
@@ -222,255 +194,337 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
     };
   }, [params, template.canvasHeight, template.canvasWidth, t, isColsMode]);
 
-  const localizedPresets = useMemo(() => {
-    return GRID_TEMPLATE_PRESETS.map((preset) => ({
-      ...preset,
-      label: t(`gridPresets.${preset.id}`, { defaultValue: preset.label }),
-    }));
-  }, [t]);
+  const handleReverseSingleDefinition = useCallback(
+    (index: number) => {
+      update(reverseSingleGridDefinition(params, index));
+    },
+    [params, update],
+  );
+
+  const handleReverseAllDefinitions = useCallback(() => {
+    update(reverseAllGridDefinitions(params));
+  }, [params, update]);
+
+  const hasReversibleDefinition = useMemo(
+    () => hasReversibleGridDefinition(params),
+    [params],
+  );
+
+  const handleSavePreset = (name: string, color: string) => {
+    const finalName = name.trim() || getDefaultCollageName();
+    const clampedCount = Math.min(
+      MAX_COLLAGE_IMAGES,
+      Math.max(MIN_COLLAGE_IMAGES, layerCount || 2),
+    );
+
+    saveCollagePreset({
+      name: finalName.slice(0, 20),
+      highlightColor: color,
+      config: {
+        imageCount: clampedCount,
+        params: {
+          ...params,
+          rowDefinitions: [...params.rowDefinitions],
+        },
+      },
+    });
+
+    toast.success(
+      t("gridDesigner.presetSaved", {
+        name: finalName,
+      }),
+    );
+    setIsSavePresetDialogOpen(false);
+  };
 
   return (
-    <AccordionCard
-      icon={<LayoutGrid size={16} />}
-      label={t("dialog.gridTitle")}
-      sublabel={sublabel}
-      colorTheme="sky"
-      alwaysOpen={true}
-    >
-      <div className="space-y-3">
-        {/* Primary Direction Selector */}
-        <div className="space-y-1">
-          <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-            {t("gridDesigner.primaryDirection", {
-              defaultValue: "Primary Direction",
-            })}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <RadioCard
-              title={t("gridDesigner.directionRows", { defaultValue: "Rows" })}
-              icon={<Rows3 size={14} />}
-              value="rows"
-              selectedValue={params.direction ?? "rows"}
-              onChange={(val) =>
-                update({ direction: val as GridPrimaryDirection })
-              }
-            />
-            <RadioCard
-              title={t("gridDesigner.directionCols", {
-                defaultValue: "Columns",
-              })}
-              icon={<Columns3 size={14} />}
-              value="cols"
-              selectedValue={params.direction ?? "rows"}
-              onChange={(val) =>
-                update({ direction: val as GridPrimaryDirection })
-              }
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <NumberInput
-            label={
-              isColsMode
-                ? t("gridDesigner.cols", { defaultValue: "Number of columns" })
-                : t("gridDesigner.rows", { defaultValue: "Number of rows" })
-            }
-            value={params.rowCount}
-            onChangeValue={updateRowCount}
-            min={1}
-            max={50}
-            tooltipContent={t("tooltips.rowCount")}
-          />
-          <NumberInput
-            label={t("gridDesigner.outerPadding")}
-            value={params.outerPadding}
-            onChangeValue={(value) => update({ outerPadding: value })}
-            min={0}
-            max={2000}
-            tooltipContent={t("tooltips.outerPadding")}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <NumberInput
-            label={t("gridDesigner.gapX")}
-            value={params.gapX}
-            onChangeValue={(value) => update({ gapX: value, gap: value })}
-            min={0}
-            max={1000}
-            tooltipContent={t("tooltips.gapX")}
-          />
-          <NumberInput
-            label={t("gridDesigner.gapY")}
-            value={params.gapY}
-            onChangeValue={(value) => update({ gapY: value, gap: value })}
-            min={0}
-            max={1000}
-            tooltipContent={t("tooltips.gapY")}
-          />
-        </div>
-
-        <CheckboxCard
-          title={
-            isColsMode
-              ? t("gridDesigner.uniformCols", {
-                  defaultValue: "Use Same Rows For All Columns",
-                })
-              : t("gridDesigner.uniformRows", {
-                  defaultValue: "Use Same Columns For All Rows",
-                })
-          }
-          subtitle={
-            isColsMode
-              ? t("gridDesigner.uniformColsDesc", {
-                  defaultValue:
-                    "Apply one shared column definition to all columns.",
-                })
-              : t("gridDesigner.uniformRowsDesc", {
-                  defaultValue: "Apply one shared row definition to all rows.",
-                })
-          }
-          icon={<Copy size={14} />}
-          checked={params.uniformColumns}
-          onChange={(checked) => update({ uniformColumns: checked })}
-        />
-
-        {params.uniformColumns ? (
-          <TextInput
-            label={
-              isColsMode
-                ? t("gridDesigner.sharedColDef", {
-                    defaultValue: "Shared Column Definition",
-                  })
-                : t("gridDesigner.sharedRowDef", {
-                    defaultValue: "Shared Row Definition",
-                  })
-            }
-            value={params.uniformColumnsDef}
-            onChange={(value) => update({ uniformColumnsDef: value })}
-            placeholder={t("gridDesigner.placeholderExamples")}
-            errorMessage={validation.sharedError ?? undefined}
-          />
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {params.rowDefinitions.map((definition, rowIndex) => (
-              <div
-                key={`grid-def-${rowIndex}`}
-                onMouseEnter={() => setHighlightedGridIndex(rowIndex)}
-                onMouseLeave={() => setHighlightedGridIndex(null)}
-              >
-                <TextInput
-                  label={
-                    isColsMode
-                      ? t("gridDesigner.colDefLabel", {
-                          index: rowIndex + 1,
-                          defaultValue: `Column ${rowIndex + 1} Rows`,
-                        })
-                      : t("gridDesigner.rowDefLabel", {
-                          index: rowIndex + 1,
-                          defaultValue: `Row ${rowIndex + 1} Columns`,
-                        })
-                  }
-                  value={definition}
-                  onChange={(value) => updateRowDefinition(rowIndex, value)}
-                  onFocus={() => setHighlightedGridIndex(rowIndex)}
-                  onBlur={() => setHighlightedGridIndex(null)}
-                  placeholder={t("gridDesigner.placeholderExamples")}
-                  errorMessage={validation.errorsByRow.get(rowIndex)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          <div className="font-medium text-slate-600 dark:text-slate-300">
-            {t("tooltips.rowDefinitionTitle", {
-              defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTitle,
-            })}
-          </div>
-          <ul className="list-disc pl-3.5 space-y-0.5">
-            {((): string[] => {
-              const raw = t("tooltips.rowDefinitionTips", {
-                returnObjects: true,
-                defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTips,
-              });
-              return Array.isArray(raw) ? (raw as string[]) : [...GRID_DESIGN_TOOLTIPS.rowDefinitionTips];
-            })().map((tip, idx) => (
-              <li key={idx}>{tip}</li>
-            ))}
-          </ul>
-        </div>
-
-        <ControlledPopover
-          behavior={popoverBehavior}
-          side="top"
-          align="end"
-          sideOffset={8}
-          collisionPadding={12}
-          openDelayMs={100}
-          closeDelayMs={120}
-          triggerWrapperClassName="block w-full"
-          trigger={
-            <button
-              type="button"
-              className="flex w-full items-center justify-between gap-2 rounded-md border border-dashed border-sky-300 bg-sky-50 px-3 py-2 text-left transition-colors hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:hover:bg-sky-900/50"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <LayoutGrid
-                  size={16}
-                  className="shrink-0 text-sky-600 dark:text-sky-400"
-                />
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-sky-700 dark:text-sky-300 truncate">
-                    {t("gridDesigner.useTemplates")}
-                  </div>
-                  <div className="text-[10px] text-sky-600/80 dark:text-sky-400/80 truncate">
-                    {t("gridDesigner.useTemplatesDesc", {
-                      defaultValue: "Select from layout presets",
-                    })}
-                  </div>
-                </div>
-              </div>
-            </button>
-          }
-          contentClassName="z-[9999] w-[min(420px,calc(100vw-24px))] rounded-lg border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-        >
-          <div className="mb-2.5">
+    <div className="space-y-3">
+      {/* Main Grid Designer Parameters Card */}
+      <AccordionCard
+        icon={<LayoutGrid size={16} />}
+        label={t("dialog.gridTitle")}
+        sublabel={sublabel}
+        colorTheme="sky"
+        alwaysOpen={true}
+      >
+        <div className="space-y-3">
+          {/* Primary Direction Selector */}
+          <div className="space-y-1">
             <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-              {t("gridDesigner.quickTemplates")}
+              {t("gridDesigner.primaryDirection")}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              {t("gridDesigner.quickTemplatesDesc", {
-                defaultValue:
-                  "Click a preset to apply layout (preserves current padding & gaps)",
+            <div className="grid grid-cols-2 gap-2">
+              <RadioCard
+                title={t("gridDesigner.directionRows")}
+                icon={<Rows3 size={14} />}
+                value="rows"
+                selectedValue={params.direction ?? "rows"}
+                onChange={(val) =>
+                  update({ direction: val as GridPrimaryDirection })
+                }
+              />
+              <RadioCard
+                title={t("gridDesigner.directionCols")}
+                icon={<Columns3 size={14} />}
+                value="cols"
+                selectedValue={params.direction ?? "rows"}
+                onChange={(val) =>
+                  update({ direction: val as GridPrimaryDirection })
+                }
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <NumberInput
+              label={
+                isColsMode ? t("gridDesigner.cols") : t("gridDesigner.rows")
+              }
+              value={params.rowCount}
+              onChangeValue={updateRowCount}
+              min={1}
+              max={50}
+              tooltipContent={t("tooltips.rowCount")}
+            />
+            <NumberInput
+              label={t("gridDesigner.outerPadding")}
+              value={params.outerPadding}
+              onChangeValue={(value) => update({ outerPadding: value })}
+              min={0}
+              max={2000}
+              tooltipContent={t("tooltips.outerPadding")}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <NumberInput
+              label={t("gridDesigner.gapX")}
+              value={params.gapX}
+              onChangeValue={(value) => update({ gapX: value, gap: value })}
+              min={0}
+              max={1000}
+              tooltipContent={t("tooltips.gapX")}
+            />
+            <NumberInput
+              label={t("gridDesigner.gapY")}
+              value={params.gapY}
+              onChangeValue={(value) => update({ gapY: value, gap: value })}
+              min={0}
+              max={1000}
+              tooltipContent={t("tooltips.gapY")}
+            />
+          </div>
+
+          <CheckboxCard
+            title={
+              isColsMode
+                ? t("gridDesigner.uniformCols")
+                : t("gridDesigner.uniformRows")
+            }
+            subtitle={
+              isColsMode
+                ? t("gridDesigner.uniformColsDesc")
+                : t("gridDesigner.uniformRowsDesc")
+            }
+            icon={<Copy size={14} />}
+            checked={params.uniformColumns}
+            onChange={(checked) => update({ uniformColumns: checked })}
+          />
+
+          {params.uniformColumns ? (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  {isColsMode
+                    ? t("gridDesigner.sharedColDef")
+                    : t("gridDesigner.sharedRowDef")}
+                </span>
+                {canReverseDefinition(params.uniformColumnsDef) && (
+                  <button
+                    type="button"
+                    onClick={handleReverseAllDefinitions}
+                    title={
+                      isColsMode
+                        ? t("gridDesigner.reverseCol")
+                        : t("gridDesigner.reverseRow")
+                    }
+                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-slate-500 hover:bg-slate-100 hover:text-sky-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-sky-400 transition-colors"
+                  >
+                    <ArrowLeftRight size={12} />
+                    <span>{t("gridDesigner.reverseAll")}</span>
+                  </button>
+                )}
+              </div>
+              <TextInput
+                label=""
+                value={params.uniformColumnsDef}
+                onChange={(value) => update({ uniformColumnsDef: value })}
+                placeholder={t("gridDesigner.placeholderExamples")}
+                errorMessage={validation.sharedError ?? undefined}
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  {isColsMode
+                    ? t("gridDesigner.colDefinitions")
+                    : t("gridDesigner.rowDefinitions")}
+                </div>
+                {hasReversibleDefinition && (
+                  <button
+                    type="button"
+                    onClick={handleReverseAllDefinitions}
+                    title={
+                      isColsMode
+                        ? t("gridDesigner.reverseAllCols")
+                        : t("gridDesigner.reverseAllRows")
+                    }
+                    className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-slate-500 hover:bg-slate-100 hover:text-sky-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-sky-400 transition-colors"
+                  >
+                    <ArrowLeftRight size={12} />
+                    <span>{t("gridDesigner.reverseAll")}</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {params.rowDefinitions.map((definition, rowIndex) => (
+                  <div
+                    key={`grid-def-${rowIndex}`}
+                    className="space-y-1"
+                    onMouseEnter={() => setHighlightedGridIndex(rowIndex)}
+                    onMouseLeave={() => setHighlightedGridIndex(null)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                        {isColsMode
+                          ? t("gridDesigner.colDefLabel", {
+                              index: rowIndex + 1,
+                            })
+                          : t("gridDesigner.rowDefLabel", {
+                              index: rowIndex + 1,
+                            })}
+                      </span>
+                      {canReverseDefinition(definition) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleReverseSingleDefinition(rowIndex)
+                          }
+                          title={
+                            isColsMode
+                              ? t("gridDesigner.reverseCol")
+                              : t("gridDesigner.reverseRow")
+                          }
+                          className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-sky-600 dark:hover:bg-slate-800 dark:hover:text-sky-400 transition-colors"
+                        >
+                          <ArrowLeftRight size={12} />
+                        </button>
+                      )}
+                    </div>
+                    <TextInput
+                      label=""
+                      value={definition}
+                      onChange={(value) => updateRowDefinition(rowIndex, value)}
+                      onFocus={() => setHighlightedGridIndex(rowIndex)}
+                      onBlur={() => setHighlightedGridIndex(null)}
+                      placeholder={t("gridDesigner.placeholderExamples")}
+                      errorMessage={validation.errorsByRow.get(rowIndex)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            <div className="font-medium text-slate-600 dark:text-slate-300">
+              {t("tooltips.rowDefinitionTitle", {
+                defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTitle,
               })}
             </div>
-          </div>
-          <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-0.5">
-            <div className="grid grid-cols-3 justify-items-center gap-2">
-              {localizedPresets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className="w-full max-w-28 aspect-[5/6] rounded-md border border-slate-200 p-2 text-left transition-colors hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:hover:border-sky-600 dark:hover:bg-sky-900/30"
-                  onClick={() => applyTemplatePreset(preset)}
-                >
-                  <div className="flex h-full flex-col">
-                    <div className="aspect-square w-full">
-                      <GridTemplatePreview preset={preset} />
-                    </div>
-                    <div className="mt-1 line-clamp-1 text-[10px] font-medium leading-4 text-slate-700 dark:text-slate-200">
-                      {preset.label}
-                    </div>
-                  </div>
-                </button>
+            <ul className="list-disc pl-3.5 space-y-0.5">
+              {((): string[] => {
+                const raw = t("tooltips.rowDefinitionTips", {
+                  returnObjects: true,
+                  defaultValue: GRID_DESIGN_TOOLTIPS.rowDefinitionTips,
+                });
+                return Array.isArray(raw)
+                  ? (raw as string[])
+                  : [...GRID_DESIGN_TOOLTIPS.rowDefinitionTips];
+              })().map((tip, idx) => (
+                <li key={idx}>{tip}</li>
               ))}
-            </div>
+            </ul>
           </div>
-        </ControlledPopover>
-      </div>
-    </AccordionCard>
+
+          {/* Preset Actions inside Grid Designer Accordion Card */}
+          <div className="pt-1 space-y-2">
+            <SidebarCard
+              icon={<LayoutGrid size={16} />}
+              label={t("gridDesigner.useTemplates")}
+              sublabel={t("gridDesigner.useTemplatesDesc")}
+              onClick={() => setIsUsePresetDialogOpen(true)}
+              colorTheme="sky"
+            />
+            {layerCount >= MIN_COLLAGE_IMAGES &&
+              layerCount <= MAX_COLLAGE_IMAGES && (
+                <SidebarCard
+                  icon={<BookmarkPlus size={16} />}
+                  label={t("gridDesigner.savePresetTitle")}
+                  sublabel={t("gridDesigner.savePresetSublabel", {
+                    count: layerCount,
+                  })}
+                  onClick={() => setIsSavePresetDialogOpen(true)}
+                  colorTheme="sky"
+                />
+              )}
+          </div>
+        </div>
+      </AccordionCard>
+
+      {/* Save Preset Dialog */}
+      <SavePresetDialog
+        isOpen={isSavePresetDialogOpen}
+        onClose={() => setIsSavePresetDialogOpen(false)}
+        onSave={handleSavePreset}
+        defaultName={getDefaultCollageName()}
+        highlightColors={PRESET_HIGHLIGHT_COLORS}
+        title={t("gridDesigner.savePresetTitle")}
+        featureKey="collage"
+      />
+
+      {/* Use Preset Dialog */}
+      <BaseDialog
+        isOpen={isUsePresetDialogOpen}
+        onClose={() => setIsUsePresetDialogOpen(false)}
+        size="4xl"
+        mobileFullscreen
+        className="h-[calc(100dvh-4rem)]"
+        contentClassName="w-full h-full max-h-none overflow-hidden flex flex-col p-4"
+      >
+        <div className="flex flex-col h-full space-y-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
+              {t("gridDesigner.usePresetModalTitle")}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t("gridDesigner.usePresetModalDesc")}
+            </p>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 pb-2">
+            <CollagePresetGrid
+              onSelectLayout={(_, presetParams) => {
+                update(presetParams);
+                setIsUsePresetDialogOpen(false);
+                toast.success(t("gridDesigner.presetApplied"));
+              }}
+              wideGrid={true}
+            />
+          </div>
+        </div>
+      </BaseDialog>
+    </div>
   );
 }

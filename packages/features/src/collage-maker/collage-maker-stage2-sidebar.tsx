@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { LayoutGrid, Ruler, Sliders } from "lucide-react";
 import {
   AccordionCard,
@@ -14,7 +14,8 @@ import type {
   GridDesignParams,
 } from "@imify/features/filling/types";
 import { CanvasDimensionControls } from "@imify/features/shared/canvas-dimension-controls";
-import { COLLAGE_LAYOUT_PRESETS } from "./config";
+import { CollagePresetGrid } from "./collage-preset-grid";
+import { CollagePresetManageDialog } from "./collage-preset-manage-dialog";
 
 interface CollageMakerStage2SidebarProps {
   queueCount: number;
@@ -50,10 +51,7 @@ export function CollageMakerStage2Sidebar({
   enableWideSidebarGrid = false,
 }: CollageMakerStage2SidebarProps) {
   const { t } = useTranslation(["collageMaker", "filling", "common"]);
-
-  const matchingPresets = COLLAGE_LAYOUT_PRESETS.filter(
-    (p) => p.imageCount === (queueCount >= 2 ? queueCount : 2),
-  );
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
 
   const sidebarItems: WorkspaceConfigSidebarItem[] = [
     {
@@ -144,34 +142,28 @@ export function CollageMakerStage2Sidebar({
           colorTheme="amber"
           defaultOpen
         >
-          <div className="grid grid-cols-3 md:grid-cols-2 gap-2">
-            {matchingPresets.map((preset) => {
-              const isSelected = selectedLayoutId === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => onSelectLayout(preset.id, preset.params)}
-                  title={preset.name || preset.id}
-                  className={`flex flex-col items-center gap-1.5 rounded-lg border p-2 transition-all cursor-pointer ${
-                    isSelected
-                      ? "border-amber-500 bg-amber-50/70 ring-1 ring-amber-400 dark:border-amber-500 dark:bg-amber-900/20"
-                      : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
-                  }`}
-                >
-                  <svg
-                    viewBox="0 0 100 100"
-                    className="aspect-square w-full rounded border border-slate-200/80 bg-slate-100 dark:border-slate-700/80 dark:bg-slate-800"
-                    dangerouslySetInnerHTML={{ __html: preset.svgPreview }}
-                  />
-                  {preset.name ? (
-                    <span className="text-[10px] font-medium text-slate-700 dark:text-slate-200 truncate w-full text-center">
-                      {preset.name}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                {t("stage2.layoutsForImages", {
+                  count: queueCount >= 2 ? queueCount : 2,
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsManageDialogOpen(true)}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors cursor-pointer"
+              >
+                <Sliders size={12} />
+                <span>{t("presetGrid.manageButton", { defaultValue: "Manage" })}</span>
+              </button>
+            </div>
+
+            <CollagePresetGrid
+              targetImageCount={queueCount >= 2 ? queueCount : 2}
+              selectedLayoutId={selectedLayoutId}
+              onSelectLayout={onSelectLayout}
+            />
           </div>
         </AccordionCard>
       ),
@@ -179,9 +171,15 @@ export function CollageMakerStage2Sidebar({
   ];
 
   return (
-    <WorkspaceConfigSidebarPanel
-      items={sidebarItems}
-      twoColumn={enableWideSidebarGrid}
-    />
+    <>
+      <WorkspaceConfigSidebarPanel
+        items={sidebarItems}
+        twoColumn={enableWideSidebarGrid}
+      />
+      <CollagePresetManageDialog
+        isOpen={isManageDialogOpen}
+        onClose={() => setIsManageDialogOpen(false)}
+      />
+    </>
   );
 }

@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Stamp, X, Brain, ChevronRight, ArrowLeft, Type } from "lucide-react";
+import {
+  Stamp,
+  X,
+  Brain,
+  ChevronRight,
+  ArrowLeft,
+  Type,
+  LayoutGrid,
+} from "lucide-react";
 import { BaseDialog, Subheading, BodyText, MutedText, Button } from "@imify/ui";
 import { useTranslation } from "@imify/i18n";
 import { AssetWatermarkTab } from "./asset-tabs/asset-watermark-tab";
 import { AssetAIModelsTab } from "./asset-tabs/asset-ai-models-tab";
 import { AssetFontsTab } from "@imify/features/workspace-chrome/asset-tabs/asset-fonts-tab";
+import { AssetCollagePresetsTab } from "./asset-tabs/asset-collage-presets-tab";
 import { useWatermarkStore } from "@imify/stores/stores/watermark-store";
 import { useFontStore } from "@imify/stores/stores/font-store";
 import { formatFileSize } from "@imify/core";
@@ -19,7 +28,7 @@ interface AssetManagementDialogProps {
 const DEFAULT_INACTIVE_CLASS =
   "text-slate-500 hover:bg-slate-50 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200";
 
-type AssetTabId = "watermark" | "ai-models" | "fonts";
+type AssetTabId = "watermark" | "ai-models" | "fonts" | "collage-presets";
 
 interface AssetTabRawDefinition {
   id: AssetTabId;
@@ -71,6 +80,18 @@ const ASSET_TABS_RAW: AssetTabRawDefinition[] = [
       activeIcon: "text-violet-600 dark:text-violet-400",
     },
   },
+  {
+    id: "collage-presets",
+    labelKey: "assets.tabs.collagePresets.label",
+    descKey: "assets.tabs.collagePresets.desc",
+    icon: LayoutGrid,
+    colors: {
+      activeBg: "bg-amber-50 dark:bg-amber-500/10",
+      activeText: "text-amber-600 dark:text-amber-300",
+      activeRing: "ring-amber-200 dark:ring-amber-800",
+      activeIcon: "text-amber-600 dark:text-amber-400",
+    },
+  },
 ];
 
 export function AssetManagementDialog({
@@ -117,6 +138,8 @@ export function AssetManagementDialog({
         return <AssetAIModelsTab />;
       case "fonts":
         return <AssetFontsTab />;
+      case "collage-presets":
+        return <AssetCollagePresetsTab />;
       default:
         return null;
     }
@@ -126,11 +149,13 @@ export function AssetManagementDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-6xl"
-      contentClassName="w-full max-w-6xl h-[calc(100dvh-2rem)] overflow-hidden flex flex-col"
+      size="6xl"
+      mobileFullscreen
+      className="h-[calc(100dvh-4rem)]"
+      contentClassName="w-full h-full max-h-none overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-5 py-3 dark:border-slate-100/10 dark:bg-slate-900 pr-12">
         <div className="flex items-center gap-3">
           {isMobile && activeTab && (
             <Button
@@ -155,15 +180,6 @@ export function AssetManagementDialog({
             )}
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-          aria-label="Close dialog"
-        >
-          <X size={18} />
-        </Button>
       </div>
 
       <div className="flex flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950/20">

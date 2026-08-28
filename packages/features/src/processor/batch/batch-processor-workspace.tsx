@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   closestCenter,
   DndContext,
@@ -16,10 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { BodyText } from "@imify/ui";
-import type {
-  ConversionProgressPayload,
-  FormatConfig,
-} from "@imify/core/types";
+import type { FormatConfig } from "@imify/core/types";
 import {
   toast,
   promptRenameInput,
@@ -231,6 +222,8 @@ export function BatchProcessorWorkspace() {
       setResizeQuickStats({
         width: null,
         height: null,
+        shortest: null,
+        longest: null,
       });
     },
     [setResizeQuickStats],

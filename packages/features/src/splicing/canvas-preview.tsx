@@ -292,6 +292,8 @@ export function CanvasPreview({
       fitValue,
       imageApplyTo,
       captionConfig,
+      captionTexts,
+      images.map((img) => img.id),
     );
 
     setLayoutResult(layoutResult);

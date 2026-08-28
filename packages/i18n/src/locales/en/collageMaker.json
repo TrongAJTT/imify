@@ -1,5 +1,6 @@
 {
-  "title": "Collage Maker",
+  "title": "Quick Collage",
+  "subtitle": "Create instant photo collages from 2 to 10 photos",
   "loadingTitle": "Loading Collage Maker...",
   "loadingSubtitle": "Initializing collage tool and layout presets...",
   "showcase": {
@@ -52,5 +53,13 @@
     "backgroundColor": "Canvas & Background Color",
     "outputSettings": "Export Settings",
     "exportCollage": "Export Collage"
+  },
+  "presetGrid": {
+    "filterLabel": "Photos",
+    "photoCount": "{{count}} photos",
+    "defaultBadge": "Default",
+    "customBadge": "Custom",
+    "emptyState": "No layouts available for {{count}} photos.",
+    "manageButton": "Manage"
   }
 }

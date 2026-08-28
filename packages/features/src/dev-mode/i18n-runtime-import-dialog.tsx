@@ -159,7 +159,7 @@ export function I18nRuntimeImportDialog({
     <BaseDialog
       isOpen={isOpen}
       onClose={handleClose}
-      className="max-w-md w-full"
+      size="md"
       contentClassName="p-6 flex flex-col gap-6"
     >
       <div className="contents" onClick={(e) => e.stopPropagation()}>
