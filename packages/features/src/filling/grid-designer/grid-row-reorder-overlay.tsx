@@ -19,7 +19,7 @@ export interface GridRowReorderOverlayProps {
   canvasWidth: number;
   canvasHeight: number;
   enabled: boolean;
-  allowReverse?: boolean;
+  allowReverseRow?: boolean;
   allowDetachSubRows?: boolean;
   rowDefinitions?: string[];
   onReorder: (fromStart: number, fromEnd: number, toIndex: number) => void;
@@ -46,7 +46,7 @@ export function GridRowReorderOverlay({
   canvasWidth,
   canvasHeight,
   enabled,
-  allowReverse = true,
+  allowReverseRow = true,
   allowDetachSubRows = true,
   rowDefinitions,
   onReorder,
@@ -362,7 +362,7 @@ export function GridRowReorderOverlay({
                           handlePointerEnterRow(rIdx, group.id)
                         }
                       >
-                        {allowReverse && canReverse && (
+                        {allowReverseRow && canReverse && (
                           <button
                             type="button"
                             data-viewer-interactive="true"
@@ -452,7 +452,7 @@ export function GridRowReorderOverlay({
                   <span>{group.startRow + 1}</span>
                 </button>
 
-                {allowReverse &&
+                {allowReverseRow &&
                   rowDefinitions &&
                   canReverseDefinition(rowDefinitions[group.startRow]) && (
                     <button
