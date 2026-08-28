@@ -294,7 +294,7 @@ export function GridRowReorderOverlay({
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                     onPointerCancel={handlePointerUp}
-                    className={`group inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold shadow-sm transition-all cursor-grab active:cursor-grabbing ${
+                    className={`group inline-flex items-center justify-center rounded-md border p-1 text-slate-600 dark:text-slate-200 shadow-sm transition-all cursor-grab active:cursor-grabbing ${
                       isBeingDragged
                         ? "scale-105 border-amber-500 bg-amber-500 text-white shadow-amber-500/30 opacity-100 ring-2 ring-amber-300"
                         : isGroupHovered
@@ -313,9 +313,6 @@ export function GridRowReorderOverlay({
                         className="shrink-0 text-current"
                       />
                     )}
-                    <span>
-                      {group.startRow + 1}–{group.endRow + 1}
-                    </span>
                   </button>
                 </div>
 
@@ -386,7 +383,7 @@ export function GridRowReorderOverlay({
                           onPointerMove={handlePointerMove}
                           onPointerUp={handlePointerUp}
                           onPointerCancel={handlePointerUp}
-                          className={`group inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium shadow-sm transition-all cursor-grab active:cursor-grabbing ${
+                          className={`group inline-flex items-center justify-center rounded-md border p-1 shadow-sm transition-all cursor-grab active:cursor-grabbing ${
                             isThisRowDragged
                               ? "scale-105 border-amber-500 bg-amber-500 text-white shadow-amber-500/30 opacity-100 ring-2 ring-amber-300"
                               : "border-sky-300 bg-sky-50 text-sky-700 hover:border-sky-500 hover:bg-sky-500 hover:text-white dark:border-sky-600 dark:bg-slate-800 dark:text-sky-300 opacity-90 shadow-sm"
@@ -403,7 +400,6 @@ export function GridRowReorderOverlay({
                               className="shrink-0 text-current"
                             />
                           )}
-                          <span>{rIdx + 1}</span>
                         </button>
                       </div>
                     );
@@ -433,7 +429,7 @@ export function GridRowReorderOverlay({
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
                   onPointerCancel={handlePointerUp}
-                  className={`group inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold shadow-sm transition-all cursor-grab active:cursor-grabbing ${
+                  className={`group inline-flex items-center justify-center rounded-md border p-1 shadow-sm transition-all cursor-grab active:cursor-grabbing ${
                     isBeingDragged
                       ? "scale-105 border-amber-500 bg-amber-500 text-white shadow-amber-500/30 opacity-100 ring-2 ring-amber-300"
                       : isGroupHovered
@@ -449,7 +445,6 @@ export function GridRowReorderOverlay({
                   ) : (
                     <GripVertical size={12} className="shrink-0 text-current" />
                   )}
-                  <span>{group.startRow + 1}</span>
                 </button>
 
                 {allowReverseRow &&
