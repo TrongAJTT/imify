@@ -38,7 +38,7 @@ import {
   MAX_COLLAGE_IMAGES,
   MIN_COLLAGE_IMAGES,
 } from "../../collage-maker/config";
-import { SavePresetDialog } from "../../processor/save-preset-dialog";
+import { promptSavePreset } from "@imify/stores";
 import { GRID_DESIGN_TOOLTIPS } from "./tooltips";
 
 interface GridDesignSidebarProps {
@@ -109,7 +109,6 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
   );
 
   const [isUsePresetDialogOpen, setIsUsePresetDialogOpen] = useState(false);
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
 
   const params = useMemo(
     () =>
@@ -234,7 +233,18 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
         name: finalName,
       }),
     );
-    setIsSavePresetDialogOpen(false);
+  };
+
+  const handleOpenSavePreset = async () => {
+    const result = await promptSavePreset({
+      defaultName: getDefaultCollageName(),
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("gridDesigner.savePresetTitle"),
+      featureKey: "collage",
+    });
+    if (result) {
+      handleSavePreset(result.name, result.color);
+    }
   };
 
   return (
@@ -476,24 +486,13 @@ export function GridDesignSidebar({ template }: GridDesignSidebarProps) {
                   sublabel={t("gridDesigner.savePresetSublabel", {
                     count: layerCount,
                   })}
-                  onClick={() => setIsSavePresetDialogOpen(true)}
+                  onClick={handleOpenSavePreset}
                   colorTheme="sky"
                 />
               )}
           </div>
         </div>
       </AccordionCard>
-
-      {/* Save Preset Dialog */}
-      <SavePresetDialog
-        isOpen={isSavePresetDialogOpen}
-        onClose={() => setIsSavePresetDialogOpen(false)}
-        onSave={handleSavePreset}
-        defaultName={getDefaultCollageName()}
-        highlightColors={PRESET_HIGHLIGHT_COLORS}
-        title={t("gridDesigner.savePresetTitle")}
-        featureKey="collage"
-      />
 
       {/* Use Preset Dialog */}
       <BaseDialog

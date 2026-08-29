@@ -2,13 +2,12 @@ import React, { useMemo, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { useTranslation } from "@imify/i18n";
 
-import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
 import { EmptyDropCard } from "@imify/ui";
 import { SplitterPresetDetail } from "./splitter-preset-detail";
 import type { SavedSplitterPreset } from "@imify/stores/stores/splitter-preset-store";
 import { useSplitterPresetStore } from "@imify/stores/stores/splitter-preset-store";
-import { confirmDialog } from "@imify/stores";
+import { confirmDialog, promptSavePreset } from "@imify/stores";
 import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { PresetActionToolbar } from "../shared/preset-action-toolbar";
@@ -113,9 +112,6 @@ export function SplitterPresetSelectView({
   onDeletePreset,
 }: SplitterPresetSelectViewProps) {
   const { t } = useTranslation("splitter");
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
-  const [editingPreset, setEditingPreset] =
-    useState<SavedSplitterPreset | null>(null);
 
   const togglePinPreset = useSplitterPresetStore(
     (state) => state.togglePinPreset,
@@ -134,30 +130,32 @@ export function SplitterPresetSelectView({
     [presets],
   );
 
-  const openCreateDialog = () => {
-    setEditingPreset(null);
-    setIsSavePresetDialogOpen(true);
-  };
-
-  const openEditDialog = (preset: SavedSplitterPreset) => {
-    setEditingPreset(preset);
-    setIsSavePresetDialogOpen(true);
-  };
-
-  const handleSavePreset = (name: string, color: string) => {
-    if (editingPreset) {
-      onUpdatePresetMeta({
-        id: editingPreset.id,
-        name,
-        highlightColor: color,
-      });
-      setEditingPreset(null);
-      setIsSavePresetDialogOpen(false);
-      return;
+  const openCreateDialog = async () => {
+    const result = await promptSavePreset({
+      defaultName: generateDefaultPresetName("splitter"),
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("saveSplitterPreset"),
+      featureKey: "splitter",
+    });
+    if (result) {
+      onCreatePreset(result.name, result.color);
     }
+  };
 
-    onCreatePreset(name, color);
-    setIsSavePresetDialogOpen(false);
+  const openEditDialog = async (preset: SavedSplitterPreset) => {
+    const result = await promptSavePreset({
+      defaultName: preset.name,
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("editSplitterPreset"),
+      featureKey: "splitter",
+    });
+    if (result) {
+      onUpdatePresetMeta({
+        id: preset.id,
+        name: result.name,
+        highlightColor: result.color,
+      });
+    }
   };
 
   const confirmDeletePreset = async (preset: SavedSplitterPreset) => {
@@ -206,25 +204,6 @@ export function SplitterPresetSelectView({
           </div>
         </>
       )}
-
-      <SavePresetDialog
-        isOpen={isSavePresetDialogOpen}
-        onClose={() => {
-          setIsSavePresetDialogOpen(false);
-          setEditingPreset(null);
-        }}
-        onSave={handleSavePreset}
-        highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
-        title={
-          editingPreset ? t("editSplitterPreset") : t("saveSplitterPreset")
-        }
-        featureKey="splitter"
-        defaultName={
-          editingPreset
-            ? editingPreset.name
-            : generateDefaultPresetName("splitter")
-        }
-      />
     </div>
   );
 }

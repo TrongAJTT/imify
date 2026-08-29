@@ -9,6 +9,7 @@ import { OOMWarningDialog } from "../processor/batch/oom-warning-dialog";
 import { SplicingHeavyPreviewQualityDialog } from "../splicing/splicing-heavy-preview-quality-dialog";
 import { WhatsNewUpdateNotificationGate } from "../workspace-chrome/whats-new-update-notification-gate";
 import { ImportProgressDialog } from "./import-progress-dialog";
+import { SavePresetDialog } from "./save-preset-dialog";
 
 export function GlobalModalsHost() {
   const { t } = useTranslation("common");
@@ -51,6 +52,11 @@ export function GlobalModalsHost() {
   const renameInput = useConfirmationDialogStore((state) => state.renameInput);
   const resolveRenameInput = useConfirmationDialogStore(
     (state) => state.resolveRenameInput,
+  );
+
+  const savePreset = useConfirmationDialogStore((state) => state.savePreset);
+  const resolveSavePreset = useConfirmationDialogStore(
+    (state) => state.resolveSavePreset,
   );
 
   const importProgress = useImportProgressStore();
@@ -135,7 +141,19 @@ export function GlobalModalsHost() {
         currentFileName={importProgress.currentFileName}
       />
 
-      {/* 7. Global Unified Toast Notifications */}
+      {/* 7. Global Save Configuration Preset Dialog */}
+      <SavePresetDialog
+        isOpen={savePreset.isOpen}
+        defaultName={savePreset.defaultName}
+        highlightColors={savePreset.highlightColors}
+        title={savePreset.title}
+        featureKey={savePreset.featureKey}
+        defaultPattern={savePreset.defaultPattern}
+        onClose={() => resolveSavePreset(null)}
+        onSave={(name, color) => resolveSavePreset({ name, color })}
+      />
+
+      {/* 8. Global Unified Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={dismissToast} />
     </>
   );

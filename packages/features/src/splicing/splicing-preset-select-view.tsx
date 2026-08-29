@@ -3,11 +3,10 @@ import { Plus, Check } from "lucide-react";
 
 import { EmptyDropCard } from "@imify/ui";
 import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
-import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { SplicingPresetDetail } from "./splicing-preset-detail";
 import type { SavedSplicingPreset } from "@imify/stores/stores/splicing-preset-store";
 import { useSplicingPresetStore } from "@imify/stores/stores/splicing-preset-store";
-import { confirmDialog } from "@imify/stores";
+import { confirmDialog, promptSavePreset } from "@imify/stores";
 import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
@@ -121,9 +120,6 @@ export function SplicingPresetSelectView({
   onTogglePinPreset,
 }: SplicingPresetSelectViewProps) {
   const { t } = useTranslation("splicing");
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
-  const [editingPreset, setEditingPreset] =
-    useState<SavedSplicingPreset | null>(null);
 
   const togglePinFromStore = useSplicingPresetStore(
     (state) => state.togglePinPreset,
@@ -140,30 +136,32 @@ export function SplicingPresetSelectView({
     [presets],
   );
 
-  const openCreateDialog = () => {
-    setEditingPreset(null);
-    setIsSavePresetDialogOpen(true);
-  };
-
-  const openEditDialog = (preset: SavedSplicingPreset) => {
-    setEditingPreset(preset);
-    setIsSavePresetDialogOpen(true);
-  };
-
-  const handleSavePreset = (name: string, color: string) => {
-    if (editingPreset) {
-      onUpdatePresetMeta({
-        id: editingPreset.id,
-        name,
-        highlightColor: color,
-      });
-      setEditingPreset(null);
-      setIsSavePresetDialogOpen(false);
-      return;
+  const openCreateDialog = async () => {
+    const result = await promptSavePreset({
+      defaultName: generateDefaultPresetName("splicing"),
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("select.savePreset"),
+      featureKey: "splicing",
+    });
+    if (result) {
+      onCreatePreset(result.name, result.color);
     }
+  };
 
-    onCreatePreset(name, color);
-    setIsSavePresetDialogOpen(false);
+  const openEditDialog = async (preset: SavedSplicingPreset) => {
+    const result = await promptSavePreset({
+      defaultName: preset.name,
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("select.editPreset"),
+      featureKey: "splicing",
+    });
+    if (result) {
+      onUpdatePresetMeta({
+        id: preset.id,
+        name: result.name,
+        highlightColor: result.color,
+      });
+    }
   };
 
   const confirmDeletePreset = async (preset: SavedSplicingPreset) => {
@@ -221,23 +219,6 @@ export function SplicingPresetSelectView({
           </div>
         </>
       )}
-
-      <SavePresetDialog
-        isOpen={isSavePresetDialogOpen}
-        onClose={() => {
-          setIsSavePresetDialogOpen(false);
-          setEditingPreset(null);
-        }}
-        onSave={handleSavePreset}
-        highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
-        title={editingPreset ? t("select.editPreset") : t("select.savePreset")}
-        featureKey="splicing"
-        defaultName={
-          editingPreset
-            ? editingPreset.name
-            : generateDefaultPresetName("splicing")
-        }
-      />
     </div>
   );
 }

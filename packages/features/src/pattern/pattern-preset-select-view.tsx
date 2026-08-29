@@ -3,10 +3,9 @@ import { Check, Pin, Plus } from "lucide-react";
 
 import { EmptyDropCard } from "@imify/ui";
 import { WorkspaceSelectHeader } from "../processor/workspace-select-header";
-import { SavePresetDialog } from "../processor/save-preset-dialog";
 import { PatternPresetDetail } from "./pattern-preset-detail";
 import type { SavedPatternPreset } from "@imify/stores/stores/pattern-preset-store";
-import { confirmDialog } from "@imify/stores";
+import { confirmDialog, promptSavePreset } from "@imify/stores";
 import { generateDefaultPresetName } from "@imify/core";
 import { PRESET_HIGHLIGHT_COLORS } from "../shared/preset-colors";
 import { useTranslation } from "@imify/i18n";
@@ -132,33 +131,31 @@ export function PatternPresetSelectView({
   onDeletePreset,
 }: PatternPresetSelectViewProps) {
   const { t } = useTranslation("pattern");
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
-  const [editingPreset, setEditingPreset] = useState<SavedPatternPreset | null>(
-    null,
-  );
 
   const sortedPresets = useMemo(() => sortPresets(presets), [presets]);
 
-  const openCreateDialog = () => {
-    setEditingPreset(null);
-    setIsSavePresetDialogOpen(true);
-  };
-
-  const openEditDialog = (preset: SavedPatternPreset) => {
-    setEditingPreset(preset);
-    setIsSavePresetDialogOpen(true);
-  };
-
-  const handleSavePreset = (name: string, color: string) => {
-    if (editingPreset) {
-      onUpdatePresetMeta({ id: editingPreset.id, name, highlightColor: color });
-      setEditingPreset(null);
-      setIsSavePresetDialogOpen(false);
-      return;
+  const openCreateDialog = async () => {
+    const result = await promptSavePreset({
+      defaultName: generateDefaultPresetName("pattern"),
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("select.savePresetTitle"),
+      featureKey: "pattern",
+    });
+    if (result) {
+      onCreatePreset(result.name, result.color);
     }
+  };
 
-    onCreatePreset(name, color);
-    setIsSavePresetDialogOpen(false);
+  const openEditDialog = async (preset: SavedPatternPreset) => {
+    const result = await promptSavePreset({
+      defaultName: preset.name,
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("select.editPresetTitle"),
+      featureKey: "pattern",
+    });
+    if (result) {
+      onUpdatePresetMeta({ id: preset.id, name: result.name, highlightColor: result.color });
+    }
   };
 
   const confirmDeletePreset = async (preset: SavedPatternPreset) => {
@@ -207,27 +204,6 @@ export function PatternPresetSelectView({
           </div>
         </>
       )}
-
-      <SavePresetDialog
-        isOpen={isSavePresetDialogOpen}
-        onClose={() => {
-          setIsSavePresetDialogOpen(false);
-          setEditingPreset(null);
-        }}
-        onSave={handleSavePreset}
-        highlightColors={[...PRESET_HIGHLIGHT_COLORS]}
-        title={
-          editingPreset
-            ? t("select.editPresetTitle")
-            : t("select.savePresetTitle")
-        }
-        featureKey="pattern"
-        defaultName={
-          editingPreset
-            ? editingPreset.name
-            : generateDefaultPresetName("pattern")
-        }
-      />
     </div>
   );
 }

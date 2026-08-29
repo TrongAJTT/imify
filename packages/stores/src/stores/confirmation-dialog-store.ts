@@ -59,11 +59,30 @@ interface RenameInputPayload {
   resolve: ((value: string | null) => void) | null
 }
 
+export interface SavePresetOptions {
+  defaultName: string
+  highlightColors?: readonly string[]
+  title?: string
+  featureKey?: string
+  defaultPattern?: string
+}
+
+export interface SavePresetResult {
+  name: string
+  color: string
+}
+
+interface SavePresetPayload extends SavePresetOptions {
+  isOpen: boolean
+  resolve: ((result: SavePresetResult | null) => void) | null
+}
+
 interface ConfirmationDialogState {
   downloadConfirm: DownloadConfirmPayload
   oomWarning: OomWarningPayload
   heavyPreviewWarning: HeavyPreviewWarningPayload
   renameInput: RenameInputPayload
+  savePreset: SavePresetPayload
   genericConfirm: GenericConfirmPayload
   genericAlert: GenericAlertPayload
 
@@ -90,6 +109,10 @@ interface ConfirmationDialogState {
   // Actions for Custom Rename Input
   openRenameInput: (pattern: string) => Promise<string | null>
   resolveRenameInput: (value: string | null) => void
+
+  // Actions for Save Preset Dialog
+  openSavePreset: (options: SavePresetOptions) => Promise<SavePresetResult | null>
+  resolveSavePreset: (result: SavePresetResult | null) => void
 }
 
 export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, get) => ({
@@ -121,6 +144,15 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
   renameInput: {
     isOpen: false,
     pattern: "",
+    resolve: null
+  },
+  savePreset: {
+    isOpen: false,
+    defaultName: "",
+    highlightColors: [],
+    title: undefined,
+    featureKey: undefined,
+    defaultPattern: undefined,
     resolve: null
   },
 
@@ -265,6 +297,40 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>((set, 
     })
   },
 
+  openSavePreset: (options: SavePresetOptions) => {
+    return new Promise<SavePresetResult | null>((resolve) => {
+      set({
+        savePreset: {
+          isOpen: true,
+          defaultName: options.defaultName,
+          highlightColors: options.highlightColors,
+          title: options.title,
+          featureKey: options.featureKey,
+          defaultPattern: options.defaultPattern,
+          resolve
+        }
+      })
+    })
+  },
+
+  resolveSavePreset: (result: SavePresetResult | null) => {
+    const { savePreset } = get()
+    if (savePreset.resolve) {
+      savePreset.resolve(result)
+    }
+    set({
+      savePreset: {
+        isOpen: false,
+        defaultName: "",
+        highlightColors: [],
+        title: undefined,
+        featureKey: undefined,
+        defaultPattern: undefined,
+        resolve: null
+      }
+    })
+  },
+
   openConfirm: (options?: ConfirmDialogOptions) => {
     return new Promise<boolean>((resolve) => {
       set({
@@ -344,4 +410,7 @@ export const confirmHeavyPreviewWarning = (imageCount: number, totalPixels: numb
 
 export const promptRenameInput = (pattern: string) =>
   useConfirmationDialogStore.getState().openRenameInput(pattern)
+
+export const promptSavePreset = (options: SavePresetOptions) =>
+  useConfirmationDialogStore.getState().openSavePreset(options)
 

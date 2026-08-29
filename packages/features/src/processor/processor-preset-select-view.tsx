@@ -8,10 +8,9 @@ import {
   type SavedSetupPreset,
   type SetupContext,
 } from "@imify/stores/stores/batch-store";
-import { confirmDialog } from "@imify/stores";
+import { confirmDialog, promptSavePreset } from "@imify/stores";
 import { generateDefaultPresetName } from "@imify/core";
 import { PresetCard } from "./preset-card";
-import { SavePresetDialog } from "./save-preset-dialog";
 import { WorkspaceSelectHeader } from "./workspace-select-header";
 
 export function ProcessorPresetSelectView({
@@ -37,10 +36,6 @@ export function ProcessorPresetSelectView({
 }) {
   const { t } = useTranslation(["processor", "common"]);
   const { togglePinPreset } = useBatchStore();
-  const [isSavePresetDialogOpen, setIsSavePresetDialogOpen] = useState(false);
-  const [editingPreset, setEditingPreset] = useState<SavedSetupPreset | null>(
-    null,
-  );
   const [selectedFormat, setSelectedFormat] = useState<string>("all");
 
   const contextLabel = context === "single" ? "Single" : "Batch";
@@ -69,13 +64,28 @@ export function ProcessorPresetSelectView({
   }, [presets, selectedFormat]);
 
   const sortedPresets = filteredPresets; // Use filtered ones for display
-  const openCreateDialog = () => {
-    setEditingPreset(null);
-    setIsSavePresetDialogOpen(true);
+  const openCreateDialog = async () => {
+    const result = await promptSavePreset({
+      defaultName: generateDefaultPresetName("processor"),
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("presetSelector.savePresetTitle"),
+      featureKey: "processor",
+    });
+    if (result) {
+      onCreatePreset(result.name, result.color);
+    }
   };
-  const openEditDialog = (preset: SavedSetupPreset) => {
-    setEditingPreset(preset);
-    setIsSavePresetDialogOpen(true);
+
+  const openEditDialog = async (preset: SavedSetupPreset) => {
+    const result = await promptSavePreset({
+      defaultName: preset.name,
+      highlightColors: PRESET_HIGHLIGHT_COLORS,
+      title: t("presetSelector.editPresetTitle"),
+      featureKey: "processor",
+    });
+    if (result) {
+      onUpdatePresetMeta({ id: preset.id, name: result.name, highlightColor: result.color });
+    }
   };
 
   const refreshPresets = async () => {
@@ -84,16 +94,6 @@ export function ProcessorPresetSelectView({
     }
   };
 
-  const handleSavePreset = (name: string, color: string) => {
-    if (editingPreset) {
-      onUpdatePresetMeta({ id: editingPreset.id, name, highlightColor: color });
-      setEditingPreset(null);
-      setIsSavePresetDialogOpen(false);
-      return;
-    }
-    onCreatePreset(name, color);
-    setIsSavePresetDialogOpen(false);
-  };
   const confirmDeletePreset = async (preset: SavedSetupPreset) => {
     const shouldDelete = await confirmDialog({
       title: t("presetSelector.deleteConfirm", { name: preset.name }),
@@ -198,26 +198,6 @@ export function ProcessorPresetSelectView({
           </div>
         </>
       )}
-      <SavePresetDialog
-        isOpen={isSavePresetDialogOpen}
-        onClose={() => {
-          setIsSavePresetDialogOpen(false);
-          setEditingPreset(null);
-        }}
-        onSave={handleSavePreset}
-        highlightColors={PRESET_HIGHLIGHT_COLORS}
-        title={
-          editingPreset
-            ? t("presetSelector.editPresetTitle")
-            : t("presetSelector.savePresetTitle")
-        }
-        featureKey="processor"
-        defaultName={
-          editingPreset
-            ? editingPreset.name
-            : generateDefaultPresetName("processor")
-        }
-      />
     </div>
   );
 }
