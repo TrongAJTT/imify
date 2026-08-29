@@ -47,7 +47,7 @@ import { GridDesignCanvasLayer } from "./canvas-layer";
 import { GridRowReorderOverlay } from "./grid-row-reorder-overlay";
 
 import { templateStorage } from "../template-storage";
-import type { FillingTemplate } from "../types";
+import type { FillingTemplate, GridDesignParams } from "../types";
 import { DEFAULT_GRID_DESIGN_PARAMS } from "../types";
 import { getInitialCanvasHeightPx } from "@imify/core";
 import { useTranslation } from "@imify/i18n";
@@ -70,6 +70,7 @@ interface GridDesignWorkspaceProps {
     template: FillingTemplate,
     destination: "fill" | "edit" | "list",
   ) => void | Promise<void>;
+  onParamsChange?: (params: GridDesignParams) => void;
   customActions?: React.ReactNode;
   autoSave?: boolean;
   allowReverseRow?: boolean;
@@ -81,6 +82,7 @@ export function GridDesignWorkspace({
   template,
   onRefresh,
   onSaved,
+  onParamsChange,
   customActions,
   autoSave = false,
   allowReverseRow = true,
@@ -226,31 +228,46 @@ export function GridDesignWorkspace({
     [parseResult, activeParams, template.canvasWidth, template.canvasHeight],
   );
 
+  const applyGridParams = useCallback(
+    (nextParams: GridDesignParams) => {
+      setGridDesignParams(nextParams);
+      onParamsChange?.(nextParams);
+    },
+    [setGridDesignParams, onParamsChange],
+  );
+
   const handleReorderRows = useCallback(
     (fromStart: number, fromEnd: number, toIndex: number) => {
-      setGridDesignParams(
-        reorderGridDefinitions(activeParams, fromStart, fromEnd, toIndex),
+      const next = reorderGridDefinitions(
+        activeParams,
+        fromStart,
+        fromEnd,
+        toIndex,
       );
+      applyGridParams(next);
     },
-    [activeParams, setGridDesignParams],
+    [activeParams, applyGridParams],
   );
 
   const isColsMode = activeParams.direction === "cols";
 
   const handleToggleDirection = useCallback(() => {
-    setGridDesignParams(toggleGridDirection(activeParams));
-  }, [activeParams, setGridDesignParams]);
+    const next = toggleGridDirection(activeParams);
+    applyGridParams(next);
+  }, [activeParams, applyGridParams]);
 
   const handleReverseSingleRow = useCallback(
     (rowIndex: number) => {
-      setGridDesignParams(reverseSingleGridDefinition(activeParams, rowIndex));
+      const next = reverseSingleGridDefinition(activeParams, rowIndex);
+      applyGridParams(next);
     },
-    [activeParams, setGridDesignParams],
+    [activeParams, applyGridParams],
   );
 
   const handleReverseAll = useCallback(() => {
-    setGridDesignParams(reverseAllGridDefinitions(activeParams));
-  }, [activeParams, setGridDesignParams]);
+    const next = reverseAllGridDefinitions(activeParams);
+    applyGridParams(next);
+  }, [activeParams, applyGridParams]);
 
   const hasReversibleDefinition = useMemo(
     () => hasReversibleGridDefinition(activeParams),

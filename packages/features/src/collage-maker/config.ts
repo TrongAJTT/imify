@@ -61,6 +61,8 @@ export const COLLAGE_LAYOUT_PRESETS: CollageLayoutPreset[] = [
   p("collage-3-default-3", 3, "cols", ["1", "2"]),
   p("collage-3-default-4", 3, "rows", ["1a 2", "1a 2"]),
   p("collage-3-default-5", 3, "cols", ["1", "2 1"]),
+  p("collage-3-default-6", 3, "rows", ["2", "1a", "="]),
+  p("collage-3-default-7", 3, "rows", ["1a 1b", "=", "1c", "=", "="]),
 
   // ==========================================
   // 4 IMAGES

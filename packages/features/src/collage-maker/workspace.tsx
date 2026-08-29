@@ -535,6 +535,7 @@ export function CollageMakerWorkspace({
         <GridDesignWorkspace
           template={generatedTemplate}
           onRefresh={async () => {}}
+          onParamsChange={handleGridParamsChange}
           allowReverseRow={false}
           allowDetachSubRows={false}
           customActions={
@@ -542,7 +543,13 @@ export function CollageMakerWorkspace({
               variant="primary"
               size="sm"
               className="gap-1.5 font-bold px-3 shadow-xs"
-              onClick={() => setStage(3)}
+              onClick={() => {
+                const latest = useFillingStore.getState().gridDesignParams;
+                if (latest) {
+                  setGridParams(latest);
+                }
+                setStage(3);
+              }}
             >
               <span>{t("stage2.nextToEdit")}</span>
               <ArrowRight size={14} />
@@ -550,6 +557,10 @@ export function CollageMakerWorkspace({
           }
           onSaved={(_template, destination) => {
             if (destination === "fill") {
+              const latest = useFillingStore.getState().gridDesignParams;
+              if (latest) {
+                setGridParams(latest);
+              }
               setStage(3);
             }
           }}
